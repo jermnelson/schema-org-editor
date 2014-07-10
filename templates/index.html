@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Schema.org Editor</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+   <div class="container">
+    <h1>Schema.org Editor</h1>
+    <form>
+     <div class="row">
+      <div class="col-md-4">
+       <div class="form-group">
+        <select class="form-control"
+               data-bind="options: availableTypes, 
+                         optionsText: 'name',
+                         optionsValue: 'value',
+                         value: selectedType">
+        </select>
+       </div>
+      </div>
+      <div class=col-md-4">
+         <div class="btn-group"> 
+          <button data-bind="click: clearForm" class="btn btn-default">
+           Clear
+          </button>
+          <button data-bind="click: showTypeEditor"
+                  class="btn btn-default">Show</button>
+         </div>
+       </div>
+      </div>
+     </div>
+    </form>
+    <div data-bind="visible: editorPane" class="pane container">
+      <h2 data-bind="text: editingType"></h2>
+      <!-- ko foreach: typeProperties -->
+      <div class="form-group">
+        <label data-bind="text: propName, 
+                          attr: { for: propId }"></label>
+        <input type="text" 
+               class="form-control"
+               data-bind="attr: { id: propId,
+                                  placeHolder: propComment,
+                                  type: inputType }"></input>
+      </div>
+      <!-- /ko -->
+    </div>
+   </div>
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
+<script>
+   
+  function viewModel(schema) {
+    var self = this;
+    self.schema = schema;
+    self.availableTypes = ko.observableArray();
+    self.clearForm = function() {
+      self.typeProperties.removeAll();
+    }
+    self.editorPane = ko.observable(false);
+    self.selectedType = ko.observable();
+    self.editingType = ko.observable();
+    self.typeProperties = ko.observableArray();
+
+    for(name in self.schema['types']) {
+      var type = schema['types'][name];
+      self.availableTypes.push({'value':name, 'name': type.label});
+    }
+    self.showTypeEditor = function() { 
+      console.log("Initial length " + self.typeProperties().length);
+      self.typeProperties.removeAll();
+      console.log("Should now be clear " + self.typeProperties().length);
+      var type = schema['types'][self.selectedType()];
+      self.editingType(type.label);
+      var propertyFields = ['properties', 'specific_properties'];
+      for(i in propertyFields) {
+       var propertyField = propertyFields[i];
+       for(j in type[propertyField]) {
+         var propId = type[propertyField][j]
+         var propName = schema['properties'][propId]['label'];
+         var propComment = schema['properties'][propId]['comment_plain'];
+         var inputType = 'text';
+         if($.inArray('Date', schema['properties'][propId]['ranges']) > -1) {
+           inputType = 'date';
+         }
+         self.typeProperties.push({'inputType': inputType,
+                                   'propId': propId,
+                                   'propName': propName,
+                                   'propComment': propComment })
+       }
+      }
+      self.typeProperties.sort(
+        function(left, right) {
+          if(left.propId > right.propId) { return 1; } else { return -1; }
+       }); 
+      
+      self.editorPane(true);
+    }
+  }
+ $.getJSON('http://schema.rdfs.org/all.json', function(data) {
+    ko.applyBindings(new viewModel(data));
+ });
+
+  
+</script>
+  </body>
+</html>
