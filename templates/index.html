@@ -34,23 +34,66 @@
            Clear
           </button>
           <button data-bind="click: showTypeEditor"
-                  class="btn btn-default">Show</button>
+                  class="btn btn-default">New</button>
+          <button data-bind="click: editEntityTypeEditor" 
+                   class="btn btn-default">
+           Edit          
+          </button>
          </div>
-       </div>
       </div>
      </div>
     </form>
+    {# START Search form row #}
+    <div class="row">
+     {# START Search column #}
+      <div class="col-md-6 col-md-offset-2">
+      {# START Search panel #}
+      <div data-bind="visible: showSearch" 
+           class="panel-primary panel">
+       {# START Search panel-heading #}
+       <div class="panel-heading"> 
+        Search 
+        <button type="button" class="close" data-bind="click: closeSearch"><span aria-hidden="true">&times;</span>
+       {# END Search panel-heading #}
+       </div>
+       {# START Search panel-body #}
+       <div class="panel-body">
+        <form class="form-inline" role="form">
+         {# START Search form-group #}
+         <div class="form-group">
+          <input type="text" 
+                 data-bind="value: idSearchValue"
+                 class="form-control" id="idSearch" 
+                 placeholder="Identifier String">
+          <button type="submit" class="btn btn-default">Retrieve</button>
+        {# END Search form-group #}
+        </div>
+       </form>
+       {# END Search panel-body #}
+       </div>
+      {# END Search panel #}
+      </div>
+     {# END Search column #}
+     </div>
+   {# END Search form row #}
+   </div>
+
     <div data-bind="visible: editorPane" class="pane container">
       <h2 data-bind="text: editingType"></h2>
+      <input type="hidden" id="uuid" data-bind="value: uuidValue">
       <!-- ko foreach: typeProperties -->
       <div class="form-group">
         <label data-bind="text: propName, 
                           attr: { for: propId }"></label>
+        
         <input type="text" 
                class="form-control"
+               onblur="updateValue(this)"
                data-bind="attr: { id: propId,
                                   placeHolder: propComment,
-                                  type: inputType }"></input>
+                                  type: propType },
+                          value: propValue"
+                          ></input>
       </div>
       <!-- /ko -->
     </div>
@@ -63,27 +106,89 @@
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
 <script>
-   
+
+{#  ko.bindingHandler.updateProperty = {
+    init: function(element, valueAccessor) {
+
+
+    }
+
+
+  }#}
+ 
+  function updateValue(element) {
+    if(element.value.length > 0) { 
+      var uuid = $('#uuid').val();
+      $.ajax({
+        type: 'POST',
+        url: '/update',
+        data: { name: element.id,
+                uuid: uuid,
+                value: element.value }
+      }).done(function(status) {
+        if(!status) {
+          alert(element.id + " not saved for " + uuid);
+        }
+      });
+    }
+  }
+ 
+  function EntityProperty(propId, 
+                          propName, 
+                          propComment, 
+                          propType,
+                          propValue) {
+     self = this;
+     self.propId = propId;
+     self.propName = propName;
+     self.propComment = propComment;
+     self.propType = propType;
+     self.propValue = ko.observable(propValue);
+     self.propValue.focused = ko.observable();
+     self.propValue.focused.subscribe(function(isActive) {
+      if(!isActive) {
+        if(self.propValue().length < 1) {
+         console.log("Prop value is " + self.propValue);
+        } else { console.log("Should now do something with value") }
+      }
+     });
+  }
+ 
   function viewModel(schema) {
     var self = this;
     self.schema = schema;
     self.availableTypes = ko.observableArray();
     self.clearForm = function() {
       self.typeProperties.removeAll();
+      self.editingType("");
+    }
+    self.closeSearch = function() {
+      self.showSearch(false);
     }
     self.editorPane = ko.observable(false);
+    self.idSearchValue = ko.observable();
     self.selectedType = ko.observable();
     self.editingType = ko.observable();
+    self.editEntityTypeEditor = function() {
+      self.clearForm();
+      self.showSearch(true);
+    }
+    
     self.typeProperties = ko.observableArray();
+    self.showSearch = ko.observable(false);
 
     for(name in self.schema['types']) {
       var type = schema['types'][name];
       self.availableTypes.push({'value':name, 'name': type.label});
     }
     self.showTypeEditor = function() { 
-      console.log("Initial length " + self.typeProperties().length);
+      self.showSearch(false);
+      if(self.uuidValue().length < 1) {
+         $.ajax({url: '/uuid/new'}).done(function(data) {
+             self.uuidValue(data);
+         });
+      }
       self.typeProperties.removeAll();
-      console.log("Should now be clear " + self.typeProperties().length);
       var type = schema['types'][self.selectedType()];
       self.editingType(type.label);
       var propertyFields = ['properties', 'specific_properties'];
@@ -97,10 +202,13 @@
          if($.inArray('Date', schema['properties'][propId]['ranges']) > -1) {
            inputType = 'date';
          }
-         self.typeProperties.push({'inputType': inputType,
-                                   'propId': propId,
-                                   'propName': propName,
-                                   'propComment': propComment })
+         self.typeProperties.push(new EntityProperty(
+                                                     propId,
+                                                     propName,
+                                                     propComment,
+                                                     inputType,
+                                                     ''));
+                                   
        }
       }
       self.typeProperties.sort(
@@ -110,6 +218,11 @@
       
       self.editorPane(true);
     }
+  
+   self.updateValue = function(property) {
+     console.log("Propetery " + property.propName + " value " + property.propValue());
+   }
+   self.uuidValue = ko.observable("");
   }
  $.getJSON('http://schema.rdfs.org/all.json', function(data) {
     ko.applyBindings(new viewModel(data));
