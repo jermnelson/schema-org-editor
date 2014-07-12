@@ -8,8 +8,10 @@
 # Copyright:   (c) Jeremy Nelson 2014
 # Licence:     MIT
 #-------------------------------------------------------------------------------
+import datetime
+import hashlib
 import json
-import uuid
+import random
 import urllib
 
 from flask import abort, Flask, g, jsonify, redirect, render_template, request
@@ -23,28 +25,40 @@ fedora_base = 'http://localhost:8080/rest/'
 
 schema_json = json.load(open('schema_org.json'))
 
-def create_entity(uuid):
+def create_entity(entity_id):
     create_request = urllib.request.Request()
 
-def entity_exists(uuid):
-    entity_uri = urllib.parse.urljoin(fedora_base, uuid)
+def entity_exists(entity_id):
+    entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
     try:
         urllib.request.urlopen(entity_uri)
         return True
     except urllib.error.HTTPError:
         return False
 
-def update_entity_property(uuid, property_name, value):
-    entity_uri = urllib.parse.urljoin(fedora_base, uuid)
-    if not entity_exists(uuid):
-        create_entity(uuid)
+def update_entity_property(entity_id,
+                           property_name,
+                           value):
+    """Method updates the Entity's property in Fedora4
+
+    Args:
+        entity_id(string): Unique ID of Fedora object
+        property_name(string): Name of schema.org property
+        value: Value of the schema.org property
+
+    Returns:
+        boolean: True if successful changed in Fedora, False otherwise
+    """
+    entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
+    if not entity_exists(entity_id):
+        create_entity(entity_id)
     sparql_template = Template("""PREFIX schema: <http://schema.org/>
     INSERT DATA {
         <$entity> $prop_name "$prop_value"
     }""")
     sparql = sparql_template.substitute(
         entity=entity_uri,
-        prop_name=property_name,
+        prop_name="schema:{}".format(property_name),
         prop_value=value)
     update_request = urllib.request.Request(
         entity_uri,
@@ -55,21 +69,26 @@ def update_entity_property(uuid, property_name, value):
 
 
 
-@editor.route("/uuid/new")
-def new_uuid():
-    return str(uuid.uuid1())
+@editor.route("/id/new")
+def new_id():
+    random_str = "{}{}".format(random.random(),
+                               datetime.datetime.utcnow().isoformat())
+    new_hash = hashlib.md5(random_str.encode())
+    return new_hash.hexdigest()
 
 @editor.route("/update",
               methods=['POST', 'GET'])
 def update():
     if not request.method.startswith('POST'):
         raise abort(401)
-    uuid = request.form['uuid']
+    entity_id = request.form['entityid']
     property_name = request.form['name']
     property_value = request.form['value']
+    result = 
+        
     return "Your request {}={} for {}".format(property_name,
         property_value,
-        uuid)
+        entity_id)
 
 
 

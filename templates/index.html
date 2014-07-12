@@ -80,7 +80,7 @@
 
     <div data-bind="visible: editorPane" class="pane container">
       <h2 data-bind="text: editingType"></h2>
-      <input type="hidden" id="uuid" data-bind="value: uuidValue">
+      <input type="hidden" id="entity_id" data-bind="value: idValue">
       <!-- ko foreach: typeProperties -->
       <div class="form-group">
         <label data-bind="text: propName, 
@@ -118,12 +118,12 @@
  
   function updateValue(element) {
     if(element.value.length > 0) { 
-      var uuid = $('#uuid').val();
+      var entity_id = $('#entity_id').val();
       $.ajax({
         type: 'POST',
         url: '/update',
         data: { name: element.id,
-                uuid: uuid,
+                entityid: entity_id,
                 value: element.value }
       }).done(function(status) {
         if(!status) {
@@ -183,9 +183,9 @@
     }
     self.showTypeEditor = function() { 
       self.showSearch(false);
-      if(self.uuidValue().length < 1) {
-         $.ajax({url: '/uuid/new'}).done(function(data) {
-             self.uuidValue(data);
+      if(self.idValue().length < 1) {
+         $.ajax({url: '/id/new'}).done(function(data) {
+             self.idValue(data);
          });
       }
       self.typeProperties.removeAll();
@@ -222,7 +222,7 @@
    self.updateValue = function(property) {
      console.log("Propetery " + property.propName + " value " + property.propValue());
    }
-   self.uuidValue = ko.observable("");
+   self.idValue = ko.observable("");
   }
  $.getJSON('http://schema.rdfs.org/all.json', function(data) {
     ko.applyBindings(new viewModel(data));
