@@ -127,7 +127,7 @@
                 value: element.value }
       }).done(function(status) {
         if(!status) {
-          alert(element.id + " not saved for " + uuid);
+          alert(element.id + " not saved for " + entity_id);
         }
       });
     }
@@ -184,7 +184,8 @@
     self.showTypeEditor = function() { 
       self.showSearch(false);
       if(self.idValue().length < 1) {
-         $.ajax({url: '/id/new'}).done(function(data) {
+         $.ajax({url: '/id/new',
+                 schema_type: self.selectedType()}).done(function(data) {
              self.idValue(data);
          });
       }

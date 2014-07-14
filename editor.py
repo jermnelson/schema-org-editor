@@ -12,6 +12,7 @@ import datetime
 import hashlib
 import json
 import random
+import rdflib
 import urllib
 
 from flask import abort, Flask, g, jsonify, redirect, render_template, request
@@ -24,9 +25,15 @@ editor = Flask(__name__)
 fedora_base = 'http://localhost:8080/rest/'
 
 schema_json = json.load(open('schema_org.json'))
+schema_ns = rdflib.Namespace('http://schema.org/')
 
 def create_entity(entity_id):
-    create_request = urllib.request.Request()
+    entity_url = urllib.parse.urljoin(fedora_base, entity_id)
+    create_request = urllib.request.Request(
+        entity_url,
+        method='PUT')
+    response = urllib.request.urlopen(create_request)
+    return entity_url
 
 def entity_exists(entity_id):
     entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
@@ -66,6 +73,9 @@ def update_entity_property(entity_id,
         method='PATCH',
         headers={'Content-Type': 'application/sparql-update'})
     response = urllib.request.urlopen(update_request)
+    if response.code < 400:
+        return True
+    return False
 
 
 
@@ -84,8 +94,11 @@ def update():
     entity_id = request.form['entityid']
     property_name = request.form['name']
     property_value = request.form['value']
-    result = 
-        
+    result = update_entity_property(entity_id,
+                                    property_name,
+                                    property_value)
+    if result is True:
+        return "Success!"
     return "Your request {}={} for {}".format(property_name,
         property_value,
         entity_id)
