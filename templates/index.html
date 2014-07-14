@@ -100,6 +100,18 @@
    </div>
 
 
+   <div class="row container">
+     <div class="col-md-12">
+      All original Source code under the 
+      <a href="http://opensource.org/licenses/MIT">MIT</a> open-source license.
+      Github source code repository at 
+      <a href="https://github.com/jermnelson/schema-org-editor">https://github.com/jermnelson/schema-org-editor</a>.
+      Please <a href="mailto:jeremy.nelson@coloradocollege.edu">email</a> Jeremy Nelson with any questions and use 
+      Github's <a href="https://github.com/jermnelson/schema-org-editor/issues">issues</a> to report bugs, questions,
+      and enhancement requests.
+     </div>
+   </div>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -184,7 +196,9 @@
     self.showTypeEditor = function() { 
       self.showSearch(false);
       if(self.idValue().length < 1) {
-         $.ajax({url: '/id/new',
+        var new_url = '/id/new/' + self.selectedType();
+        console.log(new_url);
+         $.ajax({url: new_url,
                  schema_type: self.selectedType()}).done(function(data) {
              self.idValue(data);
          });

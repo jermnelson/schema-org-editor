@@ -79,12 +79,12 @@ def update_entity_property(entity_id,
 
 
 
-@editor.route("/id/new")
-def new_id():
+@editor.route("/id/new/<entity_type>")
+def new_id(entity_type):
     random_str = "{}{}".format(random.random(),
                                datetime.datetime.utcnow().isoformat())
     new_hash = hashlib.md5(random_str.encode())
-    return new_hash.hexdigest()
+    return "/".join([entity_type, new_hash.hexdigest()])
 
 @editor.route("/update",
               methods=['POST', 'GET'])
