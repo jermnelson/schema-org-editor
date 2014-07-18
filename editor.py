@@ -43,6 +43,19 @@ def entity_exists(entity_id):
     except urllib.error.HTTPError:
         return False
 
+def replace_entity_property(entity_id,
+                            property_name,
+                            value):
+    entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
+    if 'URL' in schema_json['properties'][property_name]['ranges']:
+        sparql_template = Template("""PREFIX schema: <http://schema.org/>
+        DELETE {
+         <$entity> $prop_name <$prop_value>
+        } INSERT {
+         <$entity> $prop_name <$prop_value>
+        } WHERE {
+        }""")
+
 def update_entity_property(entity_id,
                            property_name,
                            value):
@@ -59,7 +72,13 @@ def update_entity_property(entity_id,
     entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
     if not entity_exists(entity_id):
         create_entity(entity_id)
-    sparql_template = Template("""PREFIX schema: <http://schema.org/>
+    if 'URL' in schema_json['properties'][property_name]['ranges']:
+        sparql_template = Template("""PREFIX schema: <http://schema.org/>
+    INSERT DATA {
+        <$entity> $prop_name <$prop_value>
+    }""")
+    else:
+        sparql_template = Template("""PREFIX schema: <http://schema.org/>
     INSERT DATA {
         <$entity> $prop_name "$prop_value"
     }""")
@@ -78,13 +97,47 @@ def update_entity_property(entity_id,
     return False
 
 
+@editor.route("/id/<entity_type>/<entity_id>")
+def get_entity(entity_type, entity_id):
+    entity_url = '/'.join([fedora_base, entity_type, entity_id])
+    entity_graph = rdflib.Graph().parse(entity_url)
+    entity_json = json.loads(entity_graph.serialize(format='json-ld').decode())
+    return json.dumps(entity_json)
+
+
+
 
 @editor.route("/id/new/<entity_type>")
 def new_id(entity_type):
     random_str = "{}{}".format(random.random(),
                                datetime.datetime.utcnow().isoformat())
     new_hash = hashlib.md5(random_str.encode())
-    return "/".join([entity_type, new_hash.hexdigest()])
+    entity_id = "/".join([entity_type, new_hash.hexdigest()])
+    entity_url = "".join([fedora_base, "/{}".format(entity_id)])
+    entity_graph = rdflib.Graph()
+    entity_graph.add((rdflib.URIRef(entity_url),
+                      rdflib.RDF.type,
+                      rdflib.URIRef("/".join(
+                        ["http://schema.org",entity_type]))))
+    add_stub_request = urllib.request.Request(
+        entity_url,
+        data=entity_graph.serialize(format='turtle'),
+        method='PUT',
+        headers={'Content-type': 'text/turtle'})
+    add_response = urllib.request.urlopen(add_stub_request)
+    if add_response.code < 400:
+        return entity_id
+    else:
+        raise abort(500)
+
+@editor.route("/replace",
+              methods=['POST'])
+def replace():
+    entity_id = request.form['entityid']
+    property_name = request.form['name']
+    new_value = request.form['value']
+    old_value = request.form['old']
+    return "{} {} old={} new={}".format(entity_id, property_name, new_value, new_id)
 
 @editor.route("/update",
               methods=['POST', 'GET'])
@@ -94,8 +147,9 @@ def update():
     entity_id = request.form['entityid']
     property_name = request.form['name']
     property_value = request.form['value']
+    count = request.form['count']
     result = update_entity_property(entity_id,
-                                    property_name,
+                                    property_name[:-1],
                                     property_value)
     if result is True:
         return "Success!"

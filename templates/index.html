@@ -40,7 +40,7 @@
           <button data-bind="click: clearForm" class="btn btn-default">
            Clear
           </button>
-          <button data-bind="click: showTypeEditor"
+          <button data-bind="click: newEntityTypeEditor"
                   class="btn btn-default">New</button>
           <button data-bind="click: editEntityTypeEditor" 
                    class="btn btn-default">
@@ -72,7 +72,9 @@
                  data-bind="value: idSearchValue"
                  class="form-control" id="idSearch" 
                  placeholder="Identifier String">
-          <button type="submit" class="btn btn-default">Retrieve</button>
+          <button type="submit" 
+                  class="btn btn-default"
+                  data-bind="click: loadEntity">Retrieve</button>
         {# END Search form-group #}
         </div>
        </form>
@@ -90,10 +92,19 @@
       <input type="hidden" id="entity_id" data-bind="value: idValue">
       <!-- ko foreach: typeProperties -->
       <div class="form-group">
-        <label data-bind="text: propName, 
+        <div class="row">
+         <div class="col-md-8">
+          <label data-bind="text: propName, 
                           attr: { for: propId }"></label>
-        
-        <input type="text" 
+          <a class="btn btn-xs btn-success">
+            <span class="glyphicon glyphicon-plus"></span>
+          </a>
+
+         </div>
+        </div>
+        <div class="row" data-bind="foreach: propInputs">
+         <div class="col-md-8">
+          <input type="text" 
                class="form-control"
                onblur="updateValue(this)"
                data-bind="attr: { id: propId,
@@ -101,6 +112,19 @@
                                   type: propType },
                           value: propValue"
                           ></input>
+         </div>
+         <div class="col-md-4">
+          <div class="btn-group">
+          <button onclick="replaceValue(this)" 
+                  class="btn btn-sm btn-warning" data-bind="attr: { target: propId, original: propValue }">
+            <span class="glyphicon glyphicon-retweet"></span>
+           </button>
+           <button class="btn btn-sm btn-danger">
+            <span class="glyphicon glyphicon-remove"></span></button>
+           </button>
+         </div>
+        </div>
+       </div>
       </div>
       <!-- /ko -->
     </div>
@@ -126,15 +150,22 @@
 <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
 <script>
 
-{#  ko.bindingHandler.updateProperty = {
-    init: function(element, valueAccessor) {
+  function replaceValue(element) {
+    var input =  $('#'+element.attributes['target'].value);
+    $.ajax({
+      type: 'POST',
+      url: '/replace',
+      data: {entity: $('#entity_id').val(),
+             name: name,
+             old: element.attributes['original'].value,
+             value: input.val()}
+     }).done(function(status) {
+      element.attributes['original'] = value;
 
+     });
+    
+  }
 
-    }
-
-
-  }#}
- 
   function updateValue(element) {
     if(!element.checkValidity()) {
      alert(element.id + " not valid: " + element.validationMessage);
@@ -145,10 +176,13 @@
     }
     if(element.value.length > 0) { 
       var entity_id = $('#entity_id').val();
+      var count = element.id.slice(element.id.length-1);
+      var name = element.id.slice(0, element.length-1);
       $.ajax({
         type: 'POST',
         url: '/update',
-        data: { name: element.id,
+        data: { name: name,
+                count: count,
                 entityid: entity_id,
                 value: element.value }
       }).done(function(status) {
@@ -163,23 +197,24 @@
                           propName, 
                           propComment, 
                           propType,
-                          propValue) {
+                          propValues) {
      self = this;
      self.propId = propId;
      self.propName = propName;
-     self.propComment = propComment;
-     self.propType = propType;
-     self.propValue = ko.observable(propValue);
-     self.propValue.focused = ko.observable();
-     self.propValue.focused.subscribe(function(isActive) {
-      if(!isActive) {
-        if(self.propValue().length < 1) {
-         console.log("Prop value is " + self.propValue);
-        } else { console.log("Should now do something with value") }
-      }
-     });
+     self.propInputs = [];
+     if(propValues.length > 0) {
+       for(i in propValues) {
+         var value = propValues[i];
+         var entityInput = {'propId': propId+i,
+                            'propComment': propComment,
+                            'propType': propType,
+                            'propValue': ko.observable(value), }
+         self.propInputs.push(entityInput);
+       }
+     }
   }
- 
+
+
   function viewModel(schema) {
     var self = this;
     self.schema = schema;
@@ -191,8 +226,78 @@
     self.closeSearch = function() {
       self.showSearch(false);
     }
+
+    self.createEntityProperty = function(entity, field, id, value) {
+      var propId = entity[field][id];
+      if(!propId) {
+        console.log("Prop Id " + propId + "\nentity " + entity['@id'] + "\nfield=" + field + "\nid=" + id);
+      }
+      var propName = self.schema['properties'][propId]['label'];
+      var propComment = self.schema['properties'][propId]['comment_plain'];
+      if(propComment.indexOf('legacy spelling') > -1) {
+          return;
+      }
+      var inputType = 'text';
+      if($.inArray('Date', self.schema['properties'][propId]['ranges']) > -1) {
+         inputType = 'date';
+      }
+      if($.inArray('URL', self.schema['properties'][propId]['ranges']) > -1) {
+         inputType = 'url';
+     }
+       
+     return new EntityProperty(propId,
+                              propName,
+                              propComment,
+                              inputType,
+                              value);
+
+    }
+
     self.editorPane = ko.observable(false);
     self.idSearchValue = ko.observable();
+    
+    self.loadEntity = function() {
+      $.getJSON('/id/' + self.idSearchValue(), 
+        function(data) {
+         if(data) {
+           var entity = data[0];
+           var typeName = '';
+           var idList = entity['@id'].split("/");
+           self.idValue(idList[idList.length-2] + "/" + idList[idList.length-1]);
+           for(i in entity['@type']) {
+             if(entity['@type'][i].startsWith('http://schema.org')) {
+                var type_list = entity['@type'][i].split("/");
+                // Should be the last item in the list 
+                typeName = type_list[type_list.length-1];
+             }
+           }
+           var type = self.schema['types'][typeName];
+           self.editingType(type.label);
+           for(j in type['properties']) {
+            var propertyURI = 'http://schema.org/' + type['properties'][j];
+            if(propertyURI in entity) {
+              var inputValues = [];
+              for(i in entity[propertyURI]) {
+                inputValues.push(entity[propertyURI][i]['@value']);
+              }
+              var prop = self.createEntityProperty(type, 'properties', j, inputValues);
+            } else {
+              var prop = self.createEntityProperty(type, 'properties', j, ['']);
+            }
+            if(prop) {
+              self.typeProperties.push(prop);
+             }
+           }
+          self.typeProperties.sort(
+          function(left, right) {
+            if(left.propId > right.propId) { return 1; } else { return -1; }
+          }); 
+
+          self.editorPane(true);    
+         
+         }
+       });
+    }
     self.selectedType = ko.observable();
     self.editingType = ko.observable();
     self.editEntityTypeEditor = function() {
@@ -207,43 +312,34 @@
       var type = schema['types'][name];
       self.availableTypes.push({'value':name, 'name': type.label});
     }
-    self.showTypeEditor = function() { 
+
+    self.newEntityTypeEditor = function() { 
       self.showSearch(false);
-      if(self.idValue().length < 1) {
-        var new_url = '/id/new/' + self.selectedType();
-        console.log(new_url);
-         $.ajax({url: new_url,
-                 schema_type: self.selectedType()}).done(function(data) {
+      var new_url = '/id/new/' + self.selectedType();
+      $.ajax({url: new_url,
+              schema_type: self.selectedType()}).done(function(data) {
              self.idValue(data);
-         });
-      }
+      });
+      
       self.typeProperties.removeAll();
       var type = schema['types'][self.selectedType()];
       self.editingType(type.label);
-      var propertyFields = ['properties', 'specific_properties'];
-      for(i in propertyFields) {
-       var propertyField = propertyFields[i];
-       for(j in type[propertyField]) {
-         var propId = type[propertyField][j]
-         var propName = schema['properties'][propId]['label'];
-         var propComment = schema['properties'][propId]['comment_plain'];
-         var inputType = 'text';
-         if($.inArray('Date', schema['properties'][propId]['ranges']) > -1) {
-           inputType = 'date';
+      for(j in type['properties']) {
+         var prop = self.createEntityProperty(type, 'properties', j, ['']);
+         if(prop) {
+             self.typeProperties.push(prop);
          }
-         if($.inArray('URL', schema['properties'][propId]['ranges']) > -1) {
-           inputType = 'url';
-         }
-
-         self.typeProperties.push(new EntityProperty(
-                                                     propId,
-                                                     propName,
-                                                     propComment,
-                                                     inputType,
-                                                     ''));
-                                   
-       }
       }
+      for(i in type['specific_properties']) {
+         var propId = type['specific_properties'][i];
+         if(type['properties'].indexOf(propId) > -1) {
+           var prop = self.createEntityProperty(type, 'specific_properties', i, ['']);
+           if(prop) {
+             self.typeProperties.push(prop);
+           }
+         }
+      }
+
       self.typeProperties.sort(
         function(left, right) {
           if(left.propId > right.propId) { return 1; } else { return -1; }
@@ -251,7 +347,8 @@
       
       self.editorPane(true);
     }
-  
+ 
+ 
    self.updateValue = function(property) {
      console.log("Propertery " + property.propName + " value " + property.propValue());
    }
