@@ -45,16 +45,42 @@ def entity_exists(entity_id):
 
 def replace_entity_property(entity_id,
                             property_name,
+                            old_value,
                             value):
+##    if len(old_value) < 1:
+##        return update_entity_property(entity_id, property_name, value)
     entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
     if 'URL' in schema_json['properties'][property_name]['ranges']:
         sparql_template = Template("""PREFIX schema: <http://schema.org/>
         DELETE {
-         <$entity> $prop_name <$prop_value>
+         <$entity> $prop_name <$old_value>
         } INSERT {
-         <$entity> $prop_name <$prop_value>
+         <$entity> $prop_name <$new_value>
         } WHERE {
         }""")
+    else:
+        sparql_template = Template("""PREFIX schema: <http://schema.org/>
+        DELETE {
+         <$entity> $prop_name "$old_value"
+        } INSERT {
+         <$entity> $prop_name "$new_value"
+        } WHERE {
+        }""")
+    sparql = sparql_template.substitute(
+        entity=entity_uri,
+        prop_name="schema:{}".format(property_name),
+        old_value=old_value,
+        new_value=value)
+    update_request = urllib.request.Request(
+        entity_uri,
+        data=sparql.encode(),
+        method='PATCH',
+        headers={'Content-Type': 'application/sparql-update'})
+    response = urllib.request.urlopen(update_request)
+    if response.code < 400:
+        return True
+    return False
+
 
 def update_entity_property(entity_id,
                            property_name,
@@ -131,13 +157,24 @@ def new_id(entity_type):
         raise abort(500)
 
 @editor.route("/replace",
-              methods=['POST'])
+              methods=['POST', 'GET'])
 def replace():
+##    if not request.method.startswith('POST'):
+##        raise abort(501)
     entity_id = request.form['entityid']
     property_name = request.form['name']
+    print("Before value entity={} prop_name={}".format(entity_id,
+        property_name))
     new_value = request.form['value']
     old_value = request.form['old']
-    return "{} {} old={} new={}".format(entity_id, property_name, new_value, new_id)
+    result = replace_entity_property(
+        entity_id,
+        property_name,
+        old_value,
+        new_value)
+    if result is True:
+        return "Success"
+    return "{} {} old={} new={}".format(entity_id, property_name, new_value)
 
 @editor.route("/update",
               methods=['POST', 'GET'])
@@ -149,11 +186,12 @@ def update():
     property_value = request.form['value']
     count = request.form['count']
     result = update_entity_property(entity_id,
-                                    property_name[:-1],
+                                    property_name,
                                     property_value)
     if result is True:
         return "Success!"
-    return "Your request {}={} for {}".format(property_name,
+    return "Your request {}={} for {} failed".format(property_name,
+        property_name,
         property_value,
         entity_id)
 

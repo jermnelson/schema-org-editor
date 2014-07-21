@@ -1,4 +1,4 @@
 *.bak
-*.swa
+*.swp
 *.pyc
 fedora4/*

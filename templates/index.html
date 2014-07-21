@@ -106,7 +106,6 @@
          <div class="col-md-8">
           <input type="text" 
                class="form-control"
-               onblur="updateValue(this)"
                data-bind="attr: { id: propId,
                                   placeHolder: propComment,
                                   type: propType },
@@ -115,11 +114,20 @@
          </div>
          <div class="col-md-4">
           <div class="btn-group">
+          <button class="btn btn-sm btn-primary"
+                  onclick="updateValue(this)"
+                  data-bind="attr: { target: propId }"
+                  data-toggle="tooltip" data-placement="top" title="Save" 
+                  >
+            <span class="glyphicon glyphicon-floppy-disk"></span>
+          </button>
           <button onclick="replaceValue(this)" 
-                  class="btn btn-sm btn-warning" data-bind="attr: { target: propId, original: propValue }">
+                  class="btn btn-sm btn-warning" data-bind="attr: { target: propId, original: orgValue }">
             <span class="glyphicon glyphicon-retweet"></span>
            </button>
-           <button class="btn btn-sm btn-danger">
+           <button onclick="deleteValue(this)" 
+                   class="btn btn-sm btn-danger"
+                   data-bind="attr: { target: propId }">
             <span class="glyphicon glyphicon-remove"></span></button>
            </button>
          </div>
@@ -150,45 +158,50 @@
 <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
 <script>
 
+  function deleteValue(element) {
+    console.log("In deleteValue function");
+  }
+
   function replaceValue(element) {
     var input =  $('#'+element.attributes['target'].value);
+    var name = input.attr('id').slice(0, input.attr('id').length-1);
     $.ajax({
       type: 'POST',
       url: '/replace',
-      data: {entity: $('#entity_id').val(),
+      data: {entityid: $('#entity_id').val(),
              name: name,
              old: element.attributes['original'].value,
-             value: input.val()}
+             value: input.val() }
      }).done(function(status) {
-      element.attributes['original'] = value;
+       element.attributes['original'] = input.val();
 
      });
-    
   }
 
   function updateValue(element) {
-    if(!element.checkValidity()) {
-     alert(element.id + " not valid: " + element.validationMessage);
-     console.log( + " is parent className");
-     $("#"+element.id).parent().addClass("has-error");
-     $("#"+element.id).focus();
+    var input =  document.getElementById(element.attributes['target'].value);
+    if(!input.checkValidity()) {
+     alert(input.id + " not valid: " + input.validationMessage);
+     $(input).parent().addClass("has-error");
+     $(input).focus();
      return; 
     }
-    if(element.value.length > 0) { 
+    if(input.value.length > 0) { 
       var entity_id = $('#entity_id').val();
-      var count = element.id.slice(element.id.length-1);
-      var name = element.id.slice(0, element.length-1);
+      var count = input.id.slice(element.id.length-1);
+      var name = input.id.slice(0, element.id.length-1);
       $.ajax({
         type: 'POST',
         url: '/update',
         data: { name: name,
                 count: count,
                 entityid: entity_id,
-                value: element.value }
+                value: input.value }
       }).done(function(status) {
         if(!status) {
           alert(element.id + " not saved for " + entity_id);
         }
+        element.nextElementSibling.attributes['original'].value = input.value;
       });
     }
   }
@@ -208,7 +221,8 @@
          var entityInput = {'propId': propId+i,
                             'propComment': propComment,
                             'propType': propType,
-                            'propValue': ko.observable(value), }
+                            'propValue': ko.observable(value), 
+                            'orgValue': value}
          self.propInputs.push(entityInput);
        }
      }
@@ -315,10 +329,15 @@
 
     self.newEntityTypeEditor = function() { 
       self.showSearch(false);
+      if(self.selectedType().length < 1) {
+        alert("You must select a type");
+        return;
+      }
       var new_url = '/id/new/' + self.selectedType();
+      
       $.ajax({url: new_url,
               schema_type: self.selectedType()}).done(function(data) {
-             self.idValue(data);
+              self.idValue(data);
       });
       
       self.typeProperties.removeAll();
@@ -332,7 +351,7 @@
       }
       for(i in type['specific_properties']) {
          var propId = type['specific_properties'][i];
-         if(type['properties'].indexOf(propId) > -1) {
+         if(type['properties'].indexOf(propId) < 0) {
            var prop = self.createEntityProperty(type, 'specific_properties', i, ['']);
            if(prop) {
              self.typeProperties.push(prop);
