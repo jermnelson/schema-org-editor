@@ -22,13 +22,16 @@ from string import Template
 
 editor = Flask(__name__)
 
-fedora_base = 'http://localhost:8080/rest/'
+# fedora_base = 'http://172.25.1.108:8080/rest/'
+fedora_base = 'http://localhost:8080/rest/schema/'
 
+literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
 schema_ns = rdflib.Namespace('http://schema.org/')
 
 def create_entity(entity_id):
     entity_url = urllib.parse.urljoin(fedora_base, entity_id)
+    print(entity_url)
     create_request = urllib.request.Request(
         entity_url,
         method='PUT')
@@ -50,7 +53,10 @@ def replace_entity_property(entity_id,
 ##    if len(old_value) < 1:
 ##        return update_entity_property(entity_id, property_name, value)
     entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
-    if 'URL' in schema_json['properties'][property_name]['ranges']:
+    print("{} has ranges={}".format(entity_uri, 'ranges' in ['properties'][property_name]))
+    if len(literal_set.intersection(
+        ['properties'][property_name]['ranges'])) < 1 or\
+        not 'ranges' in ['properties'][property_name]:
         sparql_template = Template("""PREFIX schema: <http://schema.org/>
         DELETE {
          <$entity> $prop_name <$old_value>
@@ -98,15 +104,17 @@ def update_entity_property(entity_id,
     entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
     if not entity_exists(entity_id):
         create_entity(entity_id)
-    if 'URL' in schema_json['properties'][property_name]['ranges']:
+
+    ranges_set = set(schema_json['properties'][property_name]['ranges'])
+    if len(literal_set.intersection(ranges_set)) > 0:
         sparql_template = Template("""PREFIX schema: <http://schema.org/>
     INSERT DATA {
-        <$entity> $prop_name <$prop_value>
+        <$entity> $prop_name "$prop_value"
     }""")
     else:
         sparql_template = Template("""PREFIX schema: <http://schema.org/>
     INSERT DATA {
-        <$entity> $prop_name "$prop_value"
+        <$entity> $prop_name <$prop_value>
     }""")
     sparql = sparql_template.substitute(
         entity=entity_uri,
@@ -126,11 +134,13 @@ def update_entity_property(entity_id,
 @editor.route("/id/<entity_type>/<entity_id>")
 def get_entity(entity_type, entity_id):
     entity_url = '/'.join([fedora_base, entity_type, entity_id])
+    try:
+        urllib.request.urlopen(entity_url)
+    except urllib.error.HTTPError:
+        abort(404)
     entity_graph = rdflib.Graph().parse(entity_url)
     entity_json = json.loads(entity_graph.serialize(format='json-ld').decode())
     return json.dumps(entity_json)
-
-
 
 
 @editor.route("/id/new/<entity_type>")
@@ -179,10 +189,16 @@ def replace():
 @editor.route("/update",
               methods=['POST', 'GET'])
 def update():
+    def filter_id(text):
+        try:
+            int(text[-1])
+            return filter_id(text[:-1])
+        except ValueError:
+            return text
     if not request.method.startswith('POST'):
         raise abort(401)
     entity_id = request.form['entityid']
-    property_name = request.form['name']
+    property_name = filter_id(request.form['name'])
     property_value = request.form['value']
     count = request.form['count']
     result = update_entity_property(entity_id,
@@ -197,9 +213,9 @@ def update():
 
 
 
-
 @editor.route("/")
 def index():
+
     return render_template("index.html",
                            schema=json.dumps(schema_json))
 

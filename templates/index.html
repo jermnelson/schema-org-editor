@@ -96,7 +96,8 @@
          <div class="col-md-8">
           <label data-bind="text: propName, 
                           attr: { for: propId }"></label>
-          <a class="btn btn-xs btn-success">
+          <a class="btn btn-xs btn-success" 
+             data-bind="click: $root.addInput">
             <span class="glyphicon glyphicon-plus"></span>
           </a>
 
@@ -193,7 +194,7 @@
       $.ajax({
         type: 'POST',
         url: '/update',
-        data: { name: name,
+        data: { name: input.id,
                 count: count,
                 entityid: entity_id,
                 value: input.value }
@@ -214,7 +215,7 @@
      self = this;
      self.propId = propId;
      self.propName = propName;
-     self.propInputs = [];
+     self.propInputs = ko.observableArray();
      if(propValues.length > 0) {
        for(i in propValues) {
          var value = propValues[i];
@@ -232,6 +233,19 @@
   function viewModel(schema) {
     var self = this;
     self.schema = schema;
+
+
+    self.addInput = function(input) {
+       var newId = input.propId + input.propInputs.length+1;
+       console.log("Trying to add new input " + newId);
+       input.propInputs.push({'propId': newId,
+                             'propComment': input.propComment,
+                             'propType': input.propType,
+                             'propValue': ko.observable(''), 
+                             'orgValue': ''});  
+
+     }
+
     self.availableTypes = ko.observableArray();
     self.clearForm = function() {
       self.typeProperties.removeAll();
@@ -279,7 +293,8 @@
            var idList = entity['@id'].split("/");
            self.idValue(idList[idList.length-2] + "/" + idList[idList.length-1]);
            for(i in entity['@type']) {
-             if(entity['@type'][i].startsWith('http://schema.org')) {
+             var prop_url = entity['@type'][i];
+             if(prop_url.search('http://schema.org') > -1) {
                 var type_list = entity['@type'][i].split("/");
                 // Should be the last item in the list 
                 typeName = type_list[type_list.length-1];
