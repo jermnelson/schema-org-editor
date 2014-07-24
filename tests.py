@@ -13,6 +13,23 @@ import editor
 import unittest
 import urllib.request
 
+class TestEditor(unittest.TestCase):
+
+    def setUp(self):
+        self.app = editor.editor.test_client()
+
+    def test_index(self):
+        rv = self.app.get("/")
+        assert ''
+
+    def tearDown(self):
+        fedora_test_uri = "/".join([editor.fedora_base, 'Test'])
+        delete_request = urllib.request.Request(
+            fedora_test_uri,
+            method='DELETE')
+        fedora_response = urllib.request.urlopen(delete_request)
+
+
 class TestEntityFunctions(unittest.TestCase):
 
     def setUp(self):
