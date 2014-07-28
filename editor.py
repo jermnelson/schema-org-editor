@@ -130,10 +130,7 @@ def update_entity_property(entity_id,
         return True
     return False
 
-
-@editor.route("/id/<entity_type>/<entity_id>")
-def get_entity(entity_type, entity_id):
-    entity_url = '/'.join([fedora_base, entity_type, entity_id])
+def retrieve_entity(entity_url):
     try:
         urllib.request.urlopen(entity_url)
     except urllib.error.HTTPError:
@@ -141,6 +138,24 @@ def get_entity(entity_type, entity_id):
     entity_graph = rdflib.Graph().parse(entity_url)
     entity_json = json.loads(entity_graph.serialize(format='json-ld').decode())
     return json.dumps(entity_json)
+
+@editor.route("/id/schema/<entity_type>/<entity_id>")
+def get_entity_workspace(entity_type, entity_id):
+    """
+
+
+    """
+    entity_url = '/'.join([fedora_base,
+                           entity_type,
+                           entity_id])
+    return retrieve_entity(entity_url)
+
+@editor.route("/id/<entity_type>/<entity_id>")
+def get_entity(entity_type, entity_id):
+    return retrieve_entity('/'.join([
+        fedora_base,
+        entity_type,
+        entity_id]))
 
 
 @editor.route("/id/new/<entity_type>")
@@ -161,6 +176,7 @@ def new_id(entity_type):
         method='PUT',
         headers={'Content-type': 'text/turtle'})
     add_response = urllib.request.urlopen(add_stub_request)
+    print("Entity url is {}".format(entity_url))
     if add_response.code < 400:
         return entity_id
     else:

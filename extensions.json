@@ -1,0 +1,289 @@
+{
+  "properties": {
+    "endDate": {
+      "comment_plain": "The end date and time of the event or item (in ISO 8601 date format).",
+      "domains": [
+        "Periodical"
+      ],
+      "ranges": [
+        "Date"
+      ]
+    },
+    "fte": {
+      "comment_plan": "The full-time student equalivant",
+      "domains": [
+        "CollegeOrUniversity"
+      ],
+      "id": "fte",
+      "label": "FTE",
+      "ranges": [
+        "Place"
+      ]
+    },
+    "hasArticle": {
+      "comment_plain": "An article contained in this issue.",
+      "domains": [
+        "PeriodicalIssue"
+      ],
+      "ranges": [
+        "Article"
+      ]
+    },
+    "hasPeriodicalIssue": {
+      "comment_plain": "An individual issue of this periodical. ",
+      "domains": [
+        "Periodical"
+      ],
+      "ranges": [
+        "PeriodicalIssue"
+      ]
+    },
+    "issn": {
+      "comment_plain": "The International Standard Serial Number that identifies this periodical. You can repeat this property to (for example) identify different formats of this periodical.",
+      "domains": [
+        "Periodical"
+      ],
+      "ranges": [
+        "Text"
+      ]
+    },
+    "issueNumber": {
+      "comment_plain": "Identifies the issue of this periodical (for example, \"iii\" or \"2\").",
+      "domains": [
+        "PeriodicalIssue"
+      ],
+      "ranges": [
+        "Text"
+      ]
+    },
+    "pagination": {
+      "comment_plain": "The range or number of pages over which a work is published (for example, \"120\" or \"533-599\").",
+      "domains": [
+        "PeriodicalIssue",
+        "Article"
+      ],
+      "ranges": [
+        "Text"
+      ]
+    },
+    "partOfPeriodical": {
+      "comment_plain": "The periodical which contains this article, issue, or volume.",
+      "domains": [
+        "PeriodicalIssue",
+        "Article"
+      ],
+      "ranges": [
+        "Periodical"
+      ]
+    },
+    "partOfPeriodicalIssue": {
+      "comment_plain": "The issue which contains this article.",
+      "domains": [
+        "Article"
+      ],
+      "ranges": [
+        "PeriodicalIssue"
+      ]
+    },
+    "startDate": {
+      "comment_plain": "The start date and time of the event or item (in ISO 8601 date format).",
+      "domains": [
+        "Periodical"
+      ],
+      "ranges": [
+        "Date"
+      ]
+    },
+    "volumeNumber": {
+      "comment_plain": "Identifies the volume of this periodical (for example, \"iii\" or \"2\").",
+      "domains": [
+        "PeriodicalIssue"
+      ],
+      "ranges": [
+        "Text"
+      ]
+    }
+  },
+  "types": {
+    "Periodical": {
+      "ancestors": [
+        "Thing",
+        "CreativeWork"
+      ],
+      "comment_plain": "A publication that consists of multiple issues, such as a magazine, scholarly journal, or newspaper.",
+      "id": "Periodical",
+      "label": "Periodical",
+      "properties": [
+        "additionalType",
+        "alternateName",
+        "description",
+        "image",
+        "name",
+        "sameAs",
+        "url",
+        "additionalType",
+        "alternateName",
+        "description",
+        "image",
+        "name",
+        "sameAs",
+        "url",
+        "about",
+        "accessibilityAPI",
+        "accessibilityControl",
+        "accessibilityFeature",
+        "accessibilityHazard",
+        "accountablePerson",
+        "aggregateRating",
+        "alternativeHeadline",
+        "associatedMedia",
+        "audience",
+        "audio",
+        "author",
+        "award",
+        "awards",
+        "citation",
+        "comment",
+        "contentLocation",
+        "contentRating",
+        "contributor",
+        "copyrightHolder",
+        "copyrightYear",
+        "creator",
+        "dateCreated",
+        "dateModified",
+        "datePublished",
+        "discussionUrl",
+        "editor",
+        "educationalAlignment",
+        "educationalUse",
+        "encoding",
+        "encodings",
+        "genre",
+        "headline",
+        "inLanguage",
+        "interactionCount",
+        "interactivityType",
+        "isBasedOnUrl",
+        "isFamilyFriendly",
+        "keywords",
+        "learningResourceType",
+        "mentions",
+        "offers",
+        "provider",
+        "publisher",
+        "publishingPrinciples",
+        "review",
+        "reviews",
+        "sourceOrganization",
+        "text",
+        "thumbnailUrl",
+        "timeRequired",
+        "typicalAgeRange",
+        "version",
+        "video"
+      ],
+      "specific_properties": [
+        "endDate",
+        "issn",
+        "hasPeriodicalIssue",
+        "startDate"
+      ],
+      "subtypes": [],
+      "supertypes": [
+        "CreativeWork"
+      ],
+      "url": ""
+    },
+    "PeriodicalIssue": {
+      "ancestors": [
+        "Thing",
+        "CreativeWork"
+      ],
+      "comment_plain": "Identifies a single issue of a Periodical, often with a volume and issue number. If the identifier is a simple string such as \"Winter 2007\", then use the name property to identify the issue",
+      "id": "PeriodicalIssue",
+      "label": "Periodical Issue",
+      "properties": [
+        "additionalType",
+        "alternateName",
+        "description",
+        "image",
+        "name",
+        "sameAs",
+        "url",
+        "additionalType",
+        "alternateName",
+        "description",
+        "image",
+        "name",
+        "sameAs",
+        "url",
+        "about",
+        "accessibilityAPI",
+        "accessibilityControl",
+        "accessibilityFeature",
+        "accessibilityHazard",
+        "accountablePerson",
+        "aggregateRating",
+        "alternativeHeadline",
+        "associatedMedia",
+        "audience",
+        "audio",
+        "author",
+        "award",
+        "awards",
+        "citation",
+        "comment",
+        "contentLocation",
+        "contentRating",
+        "contributor",
+        "copyrightHolder",
+        "copyrightYear",
+        "creator",
+        "dateCreated",
+        "dateModified",
+        "datePublished",
+        "discussionUrl",
+        "editor",
+        "educationalAlignment",
+        "educationalUse",
+        "encoding",
+        "encodings",
+        "genre",
+        "headline",
+        "inLanguage",
+        "interactionCount",
+        "interactivityType",
+        "isBasedOnUrl",
+        "isFamilyFriendly",
+        "keywords",
+        "learningResourceType",
+        "mentions",
+        "offers",
+        "provider",
+        "publisher",
+        "publishingPrinciples",
+        "review",
+        "reviews",
+        "sourceOrganization",
+        "text",
+        "thumbnailUrl",
+        "timeRequired",
+        "typicalAgeRange",
+        "version",
+        "video"
+      ],
+      "specific_properties": [
+        "hasArticle",
+        "issueNumber",
+        "pagination",
+        "volumeNumber"
+      ],
+      "subtypes": [],
+      "supertypes": [
+        "CreativeWork"
+      ],
+      "url": ""
+    }
+  }
+}

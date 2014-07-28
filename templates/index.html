@@ -291,7 +291,11 @@
            var entity = data[0];
            var typeName = '';
            var idList = entity['@id'].split("/");
-           self.idValue(idList[idList.length-2] + "/" + idList[idList.length-1]);
+           if(idList.length === 7) {
+              self.idValue(idList[idList.length-3] + "/" + idList[idList.length-2] + "/" + idList[idList.length-1]);
+           } else {
+              self.idValue(idList[idList.length-2] + "/" + idList[idList.length-1]);
+           }
            for(i in entity['@type']) {
              var prop_url = entity['@type'][i];
              if(prop_url.search('http://schema.org') > -1) {
@@ -301,7 +305,6 @@
              }
            }
            var type = self.schema['types'][typeName];
-           self.editingType(type.label);
            for(j in type['properties']) {
             var propertyURI = 'http://schema.org/' + type['properties'][j];
             if(propertyURI in entity) {
@@ -327,6 +330,11 @@
          }
        });
     }
+
+    self.loadExtension = function(json_url) {
+     console.log("In loadExtension");
+    }
+
     self.selectedType = ko.observable();
     self.editingType = ko.observable();
     self.editEntityTypeEditor = function() {
@@ -388,8 +396,15 @@
    }
    self.idValue = ko.observable("");
   }
+
+
+ console.log("Before getJSON");
+
  $.getJSON('http://schema.rdfs.org/all.json', function(data) {
-    ko.applyBindings(new viewModel(data));
+    var view_model = new viewModel(data);
+    console.log("View model " + view_model);
+    ko.applyBindings(view_model);
+   view_model.loadExtension('extensions.json');
  });
 
   
