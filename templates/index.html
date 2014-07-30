@@ -42,14 +42,21 @@
           </button>
           <button data-bind="click: newEntityTypeEditor"
                   class="btn btn-default">New</button>
-          <button data-bind="click: editEntityTypeEditor" 
+         <button data-bind="click: editEntityTypeEditor"
                    class="btn btn-default">
-           Edit          
+           Edit
+          </button>
+          <button 
+              data-bind="click: showExistingsEntities"
+              class="btn btn-default">
+           Find
           </button>
          </div>
       </div>
      </div>
     </form>
+
+
     {# START Search form row #}
     <div class="row">
      {# START Search column #}
@@ -149,8 +156,37 @@
       Please <a href="mailto:jeremy.nelson@coloradocollege.edu">email</a> Jeremy Nelson with any questions and use 
       Github's <a href="https://github.com/jermnelson/schema-org-editor/issues">issues</a> to report bugs, questions,
       and enhancement requests.
+
      </div>
+    
    </div>
+
+{# Start of Existing Entities Dialog #}
+<div class="modal fade" id="display-entities-dlg">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" >Edit <span data-bind="text: selectedType"></span> Instance</h4>
+      </div>
+      <div class="modal-body">
+        <p>Select a <span data-bind="text: selectedType"></span> from the list below to edit.</p>
+       <select data-bind="value: selectedEntity, 
+                          options: existingEntities, 
+                          optionsText: 'name',
+                          optionsValue: 'value'" size="10">
+        </select> 
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" 
+                class="btn btn-primary"
+                data-bind="click: editEntity">Edit Entity</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -237,7 +273,6 @@
 
     self.addInput = function(input) {
        var newId = input.propId + input.propInputs.length+1;
-       console.log("Trying to add new input " + newId);
        input.propInputs.push({'propId': newId,
                              'propComment': input.propComment,
                              'propType': input.propType,
@@ -281,21 +316,22 @@
 
     }
 
+    self.editEntity = function() {
+      self.idSearchValue(self.selectedEntity());
+      $('#display-entities-dlg').modal('hide');
+      self.loadEntity();
+    }
+
     self.editorPane = ko.observable(false);
     self.idSearchValue = ko.observable();
     
     self.loadEntity = function() {
-      $.getJSON('/id/' + self.idSearchValue(), 
+      $.getJSON('/id?url=' + self.idSearchValue(), 
         function(data) {
          if(data) {
            var entity = data[0];
            var typeName = '';
-           var idList = entity['@id'].split("/");
-           if(idList.length === 7) {
-              self.idValue(idList[idList.length-3] + "/" + idList[idList.length-2] + "/" + idList[idList.length-1]);
-           } else {
-              self.idValue(idList[idList.length-2] + "/" + idList[idList.length-1]);
-           }
+           self.idValue(entity['@id']);
            for(i in entity['@type']) {
              var prop_url = entity['@type'][i];
              if(prop_url.search('http://schema.org') > -1) {
@@ -332,10 +368,21 @@
     }
 
     self.loadExtension = function(json_url) {
-     console.log("In loadExtension");
+      $.getJSON(json_url, function(data) {
+        for(name in data['types']) {
+         var type = data['types'][name];
+         self.availableTypes.push({'value': name, 'name': type.label}); 
+         self.schema['types'][name] = type;
+        }
+        for(name in data['properties']) {
+         self.schema['properties'][name] = data['properties'][name];
+        }
+      });
     }
 
     self.selectedType = ko.observable();
+    self.selectedEntity = ko.observable();
+    self.existingEntities = ko.observableArray();
     self.editingType = ko.observable();
     self.editEntityTypeEditor = function() {
       self.clearForm();
@@ -350,6 +397,23 @@
       self.availableTypes.push({'value':name, 'name': type.label});
     }
 
+
+    self.showExistingsEntities = function() {
+       self.existingEntities.removeAll();
+       if(!self.selectedType()) {
+          alert("Please select a type");
+          return;
+       }
+       $.getJSON('/list/' + self.selectedType(), function(data) {
+           for(i in data) {
+             var entity = data[i];
+             self.existingEntities.push(entity);
+         }
+         $('#display-entities-dlg').modal('show');
+       });
+    }
+
+
     self.newEntityTypeEditor = function() { 
       self.showSearch(false);
       if(self.selectedType().length < 1) {
@@ -362,7 +426,8 @@
               schema_type: self.selectedType()}).done(function(data) {
               self.idValue(data);
       });
-      
+     
+
       self.typeProperties.removeAll();
       var type = schema['types'][self.selectedType()];
       self.editingType(type.label);
@@ -398,13 +463,10 @@
   }
 
 
- console.log("Before getJSON");
-
  $.getJSON('http://schema.rdfs.org/all.json', function(data) {
     var view_model = new viewModel(data);
-    console.log("View model " + view_model);
     ko.applyBindings(view_model);
-   view_model.loadExtension('extensions.json');
+   view_model.loadExtension('{{ url_for('static', filename='json/bibex.json') }}');
  });
 
   

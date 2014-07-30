@@ -5,6 +5,7 @@
       "domains": [
         "Periodical"
       ],
+      "label": "End Date",
       "ranges": [
         "Date"
       ]
@@ -25,6 +26,7 @@
       "domains": [
         "PeriodicalIssue"
       ],
+      "label": "Has Article",
       "ranges": [
         "Article"
       ]
@@ -34,6 +36,7 @@
       "domains": [
         "Periodical"
       ],
+      "label": "Has Periodical Issue",
       "ranges": [
         "PeriodicalIssue"
       ]
@@ -43,6 +46,7 @@
       "domains": [
         "Periodical"
       ],
+      "label": "ISSN",
       "ranges": [
         "Text"
       ]
@@ -52,6 +56,7 @@
       "domains": [
         "PeriodicalIssue"
       ],
+      "label": "Issue Number",
       "ranges": [
         "Text"
       ]
@@ -62,6 +67,7 @@
         "PeriodicalIssue",
         "Article"
       ],
+      "label": "Pagination",
       "ranges": [
         "Text"
       ]
@@ -72,6 +78,7 @@
         "PeriodicalIssue",
         "Article"
       ],
+      "label": "Part Of Periodical",
       "ranges": [
         "Periodical"
       ]
@@ -81,6 +88,7 @@
       "domains": [
         "Article"
       ],
+      "label": "Part Of Periodical Issue",
       "ranges": [
         "PeriodicalIssue"
       ]
@@ -90,6 +98,7 @@
       "domains": [
         "Periodical"
       ],
+      "label": "Start Date",
       "ranges": [
         "Date"
       ]
@@ -99,6 +108,7 @@
       "domains": [
         "PeriodicalIssue"
       ],
+      "label": "Volume Number",
       "ranges": [
         "Text"
       ]

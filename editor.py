@@ -24,10 +24,11 @@ editor = Flask(__name__)
 
 # fedora_base = 'http://172.25.1.108:8080/rest/'
 fedora_base = 'http://localhost:8080/rest/schema/'
-
+fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
 schema_ns = rdflib.Namespace('http://schema.org/')
+
 
 def create_entity(entity_id):
     entity_url = urllib.parse.urljoin(fedora_base, entity_id)
@@ -52,8 +53,10 @@ def replace_entity_property(entity_id,
                             value):
 ##    if len(old_value) < 1:
 ##        return update_entity_property(entity_id, property_name, value)
-    entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
-    print("{} has ranges={}".format(entity_uri, 'ranges' in ['properties'][property_name]))
+    if not entity_id.startswith("http"):
+        entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
+    else:
+        entity_uri = entity_id
     if len(literal_set.intersection(
         ['properties'][property_name]['ranges'])) < 1 or\
         not 'ranges' in ['properties'][property_name]:
@@ -101,10 +104,13 @@ def update_entity_property(entity_id,
     Returns:
         boolean: True if successful changed in Fedora, False otherwise
     """
-    entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
+    if not entity_id.startswith("http"):
+        entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
+    else:
+        entity_uri = entity_id
     if not entity_exists(entity_id):
         create_entity(entity_id)
-
+    print(entity_uri)
     ranges_set = set(schema_json['properties'][property_name]['ranges'])
     if len(literal_set.intersection(ranges_set)) > 0:
         sparql_template = Template("""PREFIX schema: <http://schema.org/>
@@ -139,6 +145,38 @@ def retrieve_entity(entity_url):
     entity_json = json.loads(entity_graph.serialize(format='json-ld').decode())
     return json.dumps(entity_json)
 
+@editor.route("/list/<entity_type>")
+def get_entities(entity_type):
+    type_url = "{}{}".format(fedora_base,
+                             entity_type)
+    entities_graph = rdflib.Graph().parse(type_url)
+    options = []
+    for obj in entities_graph.objects(
+        subject=rdflib.URIRef(type_url),
+        predicate=fcrepo.hasChild):
+            child = rdflib.Graph().parse(str(obj))
+            label = child.value(subject=obj,
+                                predicate=rdflib.RDFS.label)
+            if label is None:
+                schema_name = child.value(subject=obj,
+                                          predicate=schema_ns.name)
+                if schema_name is None:
+                    options.append({'name': str(obj),
+                                    'value': str(obj)})
+                else:
+                    options.append({'name': str(schema_name),
+                                    'value': str(obj)})
+            else:
+                options.append({'name': str(label),
+                                'value': str(obj)})
+    return json.dumps(options)
+
+@editor.route("/id")
+def get_entity_from_url():
+    url = request.args.get('url')
+    return retrieve_entity(url)
+
+
 @editor.route("/id/schema/<entity_type>/<entity_id>")
 def get_entity_workspace(entity_type, entity_id):
     """
@@ -150,6 +188,8 @@ def get_entity_workspace(entity_type, entity_id):
                            entity_id])
     return retrieve_entity(entity_url)
 
+
+
 @editor.route("/id/<entity_type>/<entity_id>")
 def get_entity(entity_type, entity_id):
     return retrieve_entity('/'.join([
@@ -158,13 +198,17 @@ def get_entity(entity_type, entity_id):
         entity_id]))
 
 
+
+
 @editor.route("/id/new/<entity_type>")
 def new_id(entity_type):
     random_str = "{}{}".format(random.random(),
                                datetime.datetime.utcnow().isoformat())
     new_hash = hashlib.md5(random_str.encode())
     entity_id = "/".join([entity_type, new_hash.hexdigest()])
-    entity_url = "".join([fedora_base, "/{}".format(entity_id)])
+    if entity_id.startswith("/"):
+        entity_id = entity_exists[1:]
+    entity_url = "".join([fedora_base, entity_id])
     entity_graph = rdflib.Graph()
     entity_graph.add((rdflib.URIRef(entity_url),
                       rdflib.RDF.type,
@@ -175,10 +219,11 @@ def new_id(entity_type):
         data=entity_graph.serialize(format='turtle'),
         method='PUT',
         headers={'Content-type': 'text/turtle'})
+    print("Entity url is {}".format(entity_url))
     add_response = urllib.request.urlopen(add_stub_request)
     print("Entity url is {}".format(entity_url))
     if add_response.code < 400:
-        return entity_id
+        return entity_url
     else:
         raise abort(500)
 
