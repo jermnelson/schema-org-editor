@@ -276,9 +276,7 @@ def update():
 
 @editor.route("/")
 def index():
-
-    return render_template("index.html",
-                           schema=json.dumps(schema_json))
+    return render_template("index.html")
 
 def main():
     host = '0.0.0.0'
