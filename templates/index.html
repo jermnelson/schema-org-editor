@@ -81,10 +81,15 @@
        </div>
        <div class="col-md-4">
         <div class="btn-group">
-          <a href="#datastream-dlg" class="btn btn-sm btn-primary">
+          <a href="#datastream-dlg" 
+             class="btn btn-sm btn-primary" 
+             data-toggle="modal">
           <span class="glyphicon glyphicon-cloud-upload"></span>
           </a>
-          <a href="#fedora-info-dlg" class="btn btn-sm btn-primary">
+          <a href="#fedora-info-dlg" 
+             class="btn btn-sm btn-primary" 
+             data-toggle="modal"
+             data-bind="click: loadFedoraInfo">
           <span class="glyphicon glyphicon-info-sign"></span>
           </a>
          </div>
@@ -197,6 +202,28 @@
     
    </div>
 
+{# Start Datastream Dialog datastream-dlg #}
+<div class="modal fade" id="datastream-dlg" tabindex="-1" role="dialog" 
+     aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="datastreamDlgLabel">Associate Datastream</h4>
+      </div>
+      <div class="modal-body">
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+{# End Datastream Dialog #}
+</div>
+
+
 {# Start of Existing Entities Dialog #}
 <div class="modal fade" id="display-entities-dlg">
   <div class="modal-dialog">
@@ -222,6 +249,32 @@
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+
+{# Start Fedora Info Dialog #}
+<div class="modal fade" id="fedora-info-dlg" tabindex="-1" role="dialog" 
+     aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">About this Fedora Object</h4>
+      </div>
+      <div class="modal-body">
+      <h4 data-bind="text: idValue()"></h4>  
+      <dl data-bind="foreach: fedoraProperties">
+        <dt data-bind="text: name"></dt>
+        <dd data-bind="text: value"></dd>
+      </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+       {# <button type="button" class="btn btn-primary">Save changes</button># }
+      </div>
+    </div>
+  </div>
+{# End Fedora Info Dialog #}
+</div>
 
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -358,6 +411,8 @@
       self.loadEntity();
     }
 
+    self.fedoraProperties = ko.observableArray();
+
     self.editorPane = ko.observable(false);
     self.idSearchValue = ko.observable();
     
@@ -367,6 +422,21 @@
          if(data) {
            var entity = data[0];
            var typeName = '';
+           self.fedoraProperties.removeAll();
+           self.fedoraProperties.push({'name': 'created', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#created'][0]['@value']});
+           self.fedoraProperties.push({'name': 'createdBy', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#createdBy'][0]['@value']});
+           self.fedoraProperties.push({'name': 'lastModified', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#lastModified'][0]['@value']});
+           self.fedoraProperties.push({'name': 'lastModifiedBy', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#lastModifiedBy'][0]['@value']});
+           self.fedoraProperties.push({'name': 'UUID', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#uuid'][0]['@value']});
+           self.fedoraProperties.push({'name': 'hasParent', 
+                                       'value': entity['http://fedora.info/definitions/v4/repository#hasParent'][0]['@id']});
+
+
            self.idValue(entity['@id']);
            for(i in entity['@type']) {
              var prop_url = entity['@type'][i];
@@ -414,6 +484,11 @@
          self.schema['properties'][name] = data['properties'][name];
         }
       });
+    }
+
+    self.loadFedoraInfo = function() {
+      console.log("In loadFedoraInfo " + self.idValue());
+      
     }
 
     self.selectedType = ko.observable();
