@@ -422,6 +422,7 @@
          if(data) {
            var entity = data[0];
            var typeName = '';
+           console.log(entity);
            self.fedoraProperties.removeAll();
            self.fedoraProperties.push({'name': 'created', 
                                        'value': entity['http://fedora.info/definitions/v4/repository#created'][0]['@value']});
@@ -451,8 +452,15 @@
             var propertyURI = 'http://schema.org/' + type['properties'][j];
             if(propertyURI in entity) {
               var inputValues = [];
+              console.log("property uri=" + propertyURI);
               for(i in entity[propertyURI]) {
-                inputValues.push(entity[propertyURI][i]['@value']);
+                var propResult = entity[propertyURI][i];
+                if($.inArray("@value", propResult)) {
+                  inputValues.push(propResult['@value']);
+                }
+                if($.inArray("@id", propResult)) {
+                  inputValues.push(propResult['@id']);
+                }
               }
               var prop = self.createEntityProperty(type, 'properties', j, inputValues);
             } else {
