@@ -21,7 +21,7 @@ from flask import abort, Flask, g, jsonify, redirect, render_template, request
 from flask import url_for
 
 #! Temp coding hack, need to install when finished
-sys.path.append("C:\\Users\\jernelson\\Development\\flask-fedora")
+sys.path.append("E:\\prog\\flask-fedora-commons")
 from flask_fedora_commons import Repository
 
 from string import Template

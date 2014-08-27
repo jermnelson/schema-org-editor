@@ -41,31 +41,31 @@
        <div class="form-group">
        {#
         <select class="form-control"
-               data-bind="options: availableTypes, 
+               data-bind="options: availableTypes,
                          optionsText: 'name',
                          optionsValue: 'value',
-                         value: selectedType">
+                         value: selectedValue">
         </select>
         #}
-        <input list="schemaTypes" class="form-control" data-bind="value: selectedType">
+        <input list="schemaTypes" class="form-control" data-bind="value: selectedValue">
 
         <datalist id="schemaTypes" data-bind="foreach: availableTypes">
           <option data-bind="value: value, text: name"></option>
         </datalist>
        </div>
       </div>
-      <div class=col-md-4">
-         <div class="btn-group"> 
+      <div class="col-md-4">
+         <div class="btn-group">
           <button data-bind="click: clearForm" class="btn btn-default">
            Clear
           </button>
           <button data-bind="click: newEntityTypeEditor"
                   class="btn btn-default">New</button>
-         <button data-bind="click: editEntityTypeEditor"
+         <button data-bind="click: editEntity"
                    class="btn btn-default">
            Edit
           </button>
-          <button 
+          <button
               data-bind="click: showExistingsEntities"
               class="btn btn-default">
            Find
@@ -81,13 +81,13 @@
        </div>
        <div class="col-md-4">
         <div class="btn-group">
-          <a href="#datastream-dlg" 
-             class="btn btn-sm btn-primary" 
+          <a href="#datastream-dlg"
+             class="btn btn-sm btn-primary"
              data-toggle="modal">
           <span class="glyphicon glyphicon-cloud-upload"></span>
           </a>
-          <a href="#fedora-info-dlg" 
-             class="btn btn-sm btn-primary" 
+          <a href="#fedora-info-dlg"
+             class="btn btn-sm btn-primary"
              data-toggle="modal"
              data-bind="click: loadFedoraInfo">
           <span class="glyphicon glyphicon-info-sign"></span>
@@ -98,43 +98,6 @@
     </form>
 
 
-    {# START Search form row #}
-    <div class="row">
-     {# START Search column #}
-      <div class="col-md-6 col-md-offset-2">
-      {# START Search panel #}
-      <div data-bind="visible: showSearch" 
-           class="panel-primary panel">
-       {# START Search panel-heading #}
-       <div class="panel-heading"> 
-        Search 
-        <button type="button" class="close" data-bind="click: closeSearch"><span aria-hidden="true">&times;</span>
-       {# END Search panel-heading #}
-       </div>
-       {# START Search panel-body #}
-       <div class="panel-body">
-        <form class="form-inline" role="form">
-         {# START Search form-group #}
-         <div class="form-group">
-          <input type="text" 
-                 data-bind="value: idSearchValue"
-                 class="form-control" id="idSearch" 
-                 placeholder="Identifier String">
-          <button type="submit" 
-                  class="btn btn-default"
-                  data-bind="click: loadEntity">Retrieve</button>
-        {# END Search form-group #}
-        </div>
-       </form>
-       {# END Search panel-body #}
-       </div>
-      {# END Search panel #}
-      </div>
-     {# END Search column #}
-     </div>
-   {# END Search form row #}
-   </div>
-
     <div data-bind="visible: editorPane" class="pane container">
       <h2 data-bind="text: editingType"></h2>
       <input type="hidden" id="entity_id" data-bind="value: idValue">
@@ -142,9 +105,9 @@
       <div class="form-group">
         <div class="row">
          <div class="col-md-8">
-          <label data-bind="text: propName, 
+          <label data-bind="text: propName,
                           attr: { for: propId }"></label>
-          <a class="btn btn-xs btn-success" 
+          <a class="btn btn-xs btn-success"
              data-bind="click: $root.addInput">
             <span class="glyphicon glyphicon-plus"></span>
           </a>
@@ -153,7 +116,7 @@
         </div>
         <div class="row" data-bind="foreach: propInputs">
          <div class="col-md-8">
-          <input type="text" 
+          <input type="text"
                class="form-control"
                data-bind="attr: { id: propId,
                                   placeHolder: propComment,
@@ -166,15 +129,15 @@
           <button class="btn btn-sm btn-primary"
                   onclick="updateValue(this)"
                   data-bind="attr: { target: propId }"
-                  data-toggle="tooltip" data-placement="top" title="Save" 
+                  data-toggle="tooltip" data-placement="top" title="Save"
                   >
             <span class="glyphicon glyphicon-floppy-disk"></span>
           </button>
-          <button onclick="replaceValue(this)" 
+          <button onclick="replaceValue(this)"
                   class="btn btn-sm btn-warning" data-bind="attr: { target: propId, original: orgValue }">
             <span class="glyphicon glyphicon-retweet"></span>
            </button>
-           <button onclick="deleteValue(this)" 
+           <button onclick="deleteValue(this)"
                    class="btn btn-sm btn-danger"
                    data-bind="attr: { target: propId }">
             <span class="glyphicon glyphicon-remove"></span></button>
@@ -190,20 +153,20 @@
 
    <div class="row container">
      <div class="col-md-12">
-      All original Source code under the 
+      All original Source code under the
       <a href="http://opensource.org/licenses/MIT">MIT</a> open-source license.
-      Github source code repository at 
+      Github source code repository at
       <a href="https://github.com/jermnelson/schema-org-editor">https://github.com/jermnelson/schema-org-editor</a>.
-      Please <a href="mailto:jeremy.nelson@coloradocollege.edu">email</a> Jeremy Nelson with any questions and use 
+      Please <a href="mailto:jeremy.nelson@coloradocollege.edu">email</a> Jeremy Nelson with any questions and use
       Github's <a href="https://github.com/jermnelson/schema-org-editor/issues">issues</a> to report bugs, questions,
       and enhancement requests.
 
      </div>
-    
+
    </div>
 
 {# Start Datastream Dialog datastream-dlg #}
-<div class="modal fade" id="datastream-dlg" tabindex="-1" role="dialog" 
+<div class="modal fade" id="datastream-dlg" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -230,19 +193,19 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" >Edit <span data-bind="text: selectedType"></span> Instance</h4>
+        <h4 class="modal-title" >Edit <span data-bind="text: selectedValue"></span> Instance</h4>
       </div>
       <div class="modal-body">
-        <p>Select a <span data-bind="text: selectedType"></span> from the list below to edit.</p>
-       <select data-bind="value: selectedEntity, 
-                          options: existingEntities, 
+        <p>Select a <span data-bind="text: selectedValue"></span> from the list below to edit.</p>
+       <select data-bind="value: selectedEntity,
+                          options: existingEntities,
                           optionsText: 'name',
                           optionsValue: 'value'" size="10">
-        </select> 
+        </select>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" 
+        <button type="button"
                 class="btn btn-primary"
                 data-bind="click: editEntity">Edit Entity</button>
       </div>
@@ -252,7 +215,7 @@
 
 
 {# Start Fedora Info Dialog #}
-<div class="modal fade" id="fedora-info-dlg" tabindex="-1" role="dialog" 
+<div class="modal fade" id="fedora-info-dlg" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -261,7 +224,7 @@
         <h4 class="modal-title" id="myModalLabel">About this Fedora Object</h4>
       </div>
       <div class="modal-body">
-      <h4 data-bind="text: idValue()"></h4>  
+      <h4 data-bind="text: idValue()"></h4>
       <dl data-bind="foreach: fedoraProperties">
         <dt data-bind="text: name"></dt>
         <dd data-bind="text: value"></dd>
@@ -310,9 +273,9 @@
      alert(input.id + " not valid: " + input.validationMessage);
      $(input).parent().addClass("has-error");
      $(input).focus();
-     return; 
+     return;
     }
-    if(input.value.length > 0) { 
+    if(input.value.length > 0) {
       var entity_id = $('#entity_id').val();
       var count = input.id.slice(element.id.length-1);
       var name = input.id.slice(0, element.id.length-1);
@@ -331,10 +294,10 @@
       });
     }
   }
- 
-  function EntityProperty(propId, 
-                          propName, 
-                          propComment, 
+
+  function EntityProperty(propId,
+                          propName,
+                          propComment,
                           propType,
                           propValues) {
      self = this;
@@ -347,7 +310,7 @@
          var entityInput = {'propId': propId+i,
                             'propComment': propComment,
                             'propType': propType,
-                            'propValue': ko.observable(value), 
+                            'propValue': ko.observable(value),
                             'orgValue': value}
          self.propInputs.push(entityInput);
        }
@@ -365,8 +328,8 @@
        input.propInputs.push({'propId': newId,
                              'propComment': input.propComment,
                              'propType': input.propType,
-                             'propValue': ko.observable(''), 
-                             'orgValue': ''});  
+                             'propValue': ko.observable(''),
+                             'orgValue': ''});
 
      }
 
@@ -396,7 +359,7 @@
       if($.inArray('URL', self.schema['properties'][propId]['ranges']) > -1) {
          inputType = 'url';
      }
-       
+
      return new EntityProperty(propId,
                               propName,
                               propComment,
@@ -406,7 +369,7 @@
     }
 
     self.editEntity = function() {
-      self.idSearchValue(self.selectedEntity());
+      self.selectedValue(self.selectedEntity());
       $('#display-entities-dlg').modal('hide');
       self.loadEntity();
     }
@@ -415,26 +378,31 @@
 
     self.editorPane = ko.observable(false);
     self.idSearchValue = ko.observable();
-    
+    self.selectedValue = ko.observable();
+
     self.loadEntity = function() {
-      $.getJSON('/id?url=' + self.idSearchValue(), 
+      if (self.selectedValue().substring(0, 'http'.length) !== 'http') {
+        alert('Not a valid string');
+        return;
+      }
+      $.getJSON('/id?url=' + self.selectedValue(),
         function(data) {
          if(data) {
            var entity = data[0];
            var typeName = '';
            console.log(entity);
            self.fedoraProperties.removeAll();
-           self.fedoraProperties.push({'name': 'created', 
+           self.fedoraProperties.push({'name': 'created',
                                        'value': entity['http://fedora.info/definitions/v4/repository#created'][0]['@value']});
-           self.fedoraProperties.push({'name': 'createdBy', 
+           self.fedoraProperties.push({'name': 'createdBy',
                                        'value': entity['http://fedora.info/definitions/v4/repository#createdBy'][0]['@value']});
-           self.fedoraProperties.push({'name': 'lastModified', 
+           self.fedoraProperties.push({'name': 'lastModified',
                                        'value': entity['http://fedora.info/definitions/v4/repository#lastModified'][0]['@value']});
-           self.fedoraProperties.push({'name': 'lastModifiedBy', 
+           self.fedoraProperties.push({'name': 'lastModifiedBy',
                                        'value': entity['http://fedora.info/definitions/v4/repository#lastModifiedBy'][0]['@value']});
-           self.fedoraProperties.push({'name': 'UUID', 
+           self.fedoraProperties.push({'name': 'UUID',
                                        'value': entity['http://fedora.info/definitions/v4/repository#uuid'][0]['@value']});
-           self.fedoraProperties.push({'name': 'hasParent', 
+           self.fedoraProperties.push({'name': 'hasParent',
                                        'value': entity['http://fedora.info/definitions/v4/repository#hasParent'][0]['@id']});
 
 
@@ -443,7 +411,7 @@
              var prop_url = entity['@type'][i];
              if(prop_url.search('http://schema.org') > -1) {
                 var type_list = entity['@type'][i].split("/");
-                // Should be the last item in the list 
+                // Should be the last item in the list
                 typeName = type_list[type_list.length-1];
              }
            }
@@ -473,10 +441,10 @@
           self.typeProperties.sort(
           function(left, right) {
             if(left.propId > right.propId) { return 1; } else { return -1; }
-          }); 
+          });
 
-          self.editorPane(true);    
-         
+          self.editorPane(true);
+
          }
        });
     }
@@ -485,7 +453,7 @@
       $.getJSON(json_url, function(data) {
         for(name in data['types']) {
          var type = data['types'][name];
-         self.availableTypes.push({'value': name, 'name': type.label}); 
+         self.availableTypes.push({'value': name, 'name': type.label});
          self.schema['types'][name] = type;
         }
         for(name in data['properties']) {
@@ -496,10 +464,9 @@
 
     self.loadFedoraInfo = function() {
       console.log("In loadFedoraInfo " + self.idValue());
-      
+
     }
 
-    self.selectedType = ko.observable();
     self.selectedEntity = ko.observable();
     self.existingEntities = ko.observableArray();
     self.editingType = ko.observable();
@@ -507,7 +474,7 @@
       self.clearForm();
       self.showSearch(true);
     }
-    
+
     self.typeProperties = ko.observableArray();
     self.showSearch = ko.observable(false);
 
@@ -519,11 +486,11 @@
 
     self.showExistingsEntities = function() {
        self.existingEntities.removeAll();
-       if(!self.selectedType()) {
+       if(!self.selectedValue() || self.selectedValue().substring(0, 'http'.length) === 'http') {
           alert("Please select a type");
           return;
        }
-       $.getJSON('/list/' + self.selectedType(), function(data) {
+       $.getJSON('/list/' + self.selectedValue(), function(data) {
            for(i in data) {
              var entity = data[i];
              self.existingEntities.push(entity);
@@ -533,22 +500,22 @@
     }
 
 
-    self.newEntityTypeEditor = function() { 
+    self.newEntityTypeEditor = function() {
       self.showSearch(false);
-      if(self.selectedType().length < 1) {
+      if(self.selectedValue().length < 1 || self.selectedValue().substring(0, 'http'.length) === 'http') {
         alert("You must select a type");
         return;
       }
-      var new_url = '/id/new/' + self.selectedType();
-      
+      var new_url = '/id/new/' + self.selectedValue();
+
       $.ajax({url: new_url,
-              schema_type: self.selectedType()}).done(function(data) {
+              schema_type: self.selectedValue()}).done(function(data) {
               self.idValue(data);
       });
-     
+
 
       self.typeProperties.removeAll();
-      var type = schema['types'][self.selectedType()];
+      var type = schema['types'][self.selectedValue()];
       self.editingType(type.label);
       for(j in type['properties']) {
          var prop = self.createEntityProperty(type, 'properties', j, ['']);
@@ -569,12 +536,12 @@
       self.typeProperties.sort(
         function(left, right) {
           if(left.propId > right.propId) { return 1; } else { return -1; }
-       }); 
-      
+       });
+
       self.editorPane(true);
     }
- 
- 
+
+
    self.updateValue = function(property) {
      console.log("Propertery " + property.propName + " value " + property.propValue());
    }
@@ -588,7 +555,7 @@
     view_model.loadExtension('{{ url_for('static', filename='json/bibex.json') }}');
  });
 
-  
+
 </script>
   </body>
 </html>
