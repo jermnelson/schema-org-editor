@@ -452,7 +452,6 @@
             var propertyURI = 'http://schema.org/' + type['properties'][j];
             if(propertyURI in entity) {
               var inputValues = [];
-              console.log("property uri=" + propertyURI);
               for(i in entity[propertyURI]) {
                 var propResult = entity[propertyURI][i];
                 if($.inArray("@value", propResult)) {
