@@ -390,6 +390,7 @@
            var typeName = '';
            console.log(entity);
            self.fedoraProperties.removeAll();
+           console.log(entity);
            self.fedoraProperties.push({'name': 'created',
                                        'value': entity['http://fedora.info/definitions/v4/repository#created'][0]['@value']});
            self.fedoraProperties.push({'name': 'createdBy',
@@ -412,6 +413,9 @@
                 // Should be the last item in the list
                 typeName = type_list[type_list.length-1];
              }
+           }
+           if(!typeName) {
+                typeName = 'CreativeWork';
            }
            var type = self.schema['types'][typeName];
            for(j in type['properties']) {
