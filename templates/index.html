@@ -175,7 +175,12 @@
         <h4 class="modal-title" id="datastreamDlgLabel">Associate Datastream</h4>
       </div>
       <div class="modal-body">
-
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <p>
+            <input type="file" name="file">
+            <input type="submit" value="Upload">
+          </p>
+        </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
