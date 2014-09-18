@@ -2,7 +2,7 @@
 # Name:        editor
 # Purpose:     Schema.org Editor
 #
-# Author:      Jeremy Nelson
+# Author:      Jeremy Nelson, Lucas
 #
 # Created:     2014/09/07
 # Copyright:   (c) Jeremy Nelson 2014
@@ -21,7 +21,8 @@ from flask import abort, Flask, g, jsonify, redirect, render_template, request
 from flask import url_for
 
 #! Temp coding hack, need to install when finished
-sys.path.append("E:\\prog\\flask-fedora-commons")
+#sys.path.append("E:\\prog\\flask-fedora-commons")
+sys.path.append("C:\\Users\\jernelson\\Development\\flask-fedora")
 from flask_fedora_commons import Repository
 
 from string import Template
@@ -67,7 +68,9 @@ def get_entities(entity_type):
 @editor.route("/id")
 def get_entity_from_url():
     url = request.args.get('url')
-    return repo.as_json(url)
+    entity_json = repo.as_json(url)
+    print("{} json {}".format(url, entity_json))
+    return entity_json
 
 
 @editor.route("/id/schema/<entity_type>/<entity_id>")
