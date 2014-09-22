@@ -113,6 +113,23 @@ def new_id(entity_type):
     else:
         raise abort(500)
 
+@editor.route("/remove",
+              methods=['POST', 'GET'])
+def remove():
+    entity_id = request.form['entityid']
+    property_name = request.form['name']
+    value = request.form['value']
+    result = repo.remove(
+        'schema',
+        'http://schemar.org/',
+        entity_id,
+        getattr(schema_ns, property_name),
+        value)
+    if result is True:
+        return "Success"
+    return "Failed to remove {}'s {} with value {}".format(
+        entity_id, property_name, value)
+
 @editor.route("/replace",
               methods=['POST', 'GET'])
 def replace():

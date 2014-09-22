@@ -248,7 +248,19 @@
 <script>
 
   function deleteValue(element) {
-    console.log("In deleteValue function");
+    var input =  $('#'+element.attributes['target'].value);
+    var name = input.attr('id').slice(0, input.attr('id').length-1);
+    $.ajax({
+      type: 'POST',
+      url: '/replace',
+      data: {entityid: $('#entity_id').val(),
+             name: name,
+             value: input.val() }
+     }).done(function(status) {
+       $(element).remove();
+       //element.attributes['original'] = input.val();
+     });
+
   }
 
   function replaceValue(element) {
