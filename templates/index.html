@@ -252,12 +252,15 @@
     var name = input.attr('id').slice(0, input.attr('id').length-1);
     $.ajax({
       type: 'POST',
-      url: '/replace',
+      url: '/remove',
       data: {entityid: $('#entity_id').val(),
              name: name,
              value: input.val() }
      }).done(function(status) {
-       $(element).remove();
+       var btn_grp = $(element).parent();
+       var input_field = btn_grp.parent().prev();
+       btn_grp.remove();
+       input_field.remove();
        //element.attributes['original'] = input.val();
      });
 
@@ -577,3 +580,4 @@
 </script>
   </body>
 </html>
+
