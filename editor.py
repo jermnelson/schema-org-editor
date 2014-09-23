@@ -133,8 +133,6 @@ def remove():
 @editor.route("/replace",
               methods=['POST', 'GET'])
 def replace():
-##    if not request.method.startswith('POST'):
-##        raise abort(501)
     entity_id = request.form['entityid']
     property_name = 'schema:{}'.format(request.form['name'])
     new_value = request.form['value']
