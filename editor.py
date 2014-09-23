@@ -37,6 +37,7 @@ fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
 schema_ns = rdflib.Namespace('http://schema.org/')
+namespaces = [('schema', str(schema_ns))]
 
 
 @editor.route("/list/<entity_type>")
@@ -120,10 +121,9 @@ def remove():
     property_name = request.form['name']
     value = request.form['value']
     result = repo.remove(
-        'schema',
-        'http://schemar.org/',
+        namespaces,
         entity_id,
-        getattr(schema_ns, property_name),
+        'schema:{}'.format(property_name),
         value)
     if result is True:
         return "Success"
@@ -136,12 +136,13 @@ def replace():
 ##    if not request.method.startswith('POST'):
 ##        raise abort(501)
     entity_id = request.form['entityid']
-    property_name = request.form['name']
+    property_name = 'schema:{}'.format(request.form['name'])
     new_value = request.form['value']
     old_value = request.form['old']
     result = repo.replace(
+        namespaces,
         entity_id,
-##        property_name,
+        property_name,
         old_value,
         new_value)
     if result is True:
@@ -160,10 +161,11 @@ def update():
     if not request.method.startswith('POST'):
         raise abort(401)
     entity_id = request.form['entityid']
-    property_name = filter_id(request.form['name'])
+    property_name = "schema:{}".format(filter_id(request.form['name']))
     property_value = request.form['value']
     count = request.form['count']
-    result = repo.update(entity_id,
+    result = repo.update(namespaces,
+                         entity_id,
                          property_name,
                          property_value)
     if result is True:
