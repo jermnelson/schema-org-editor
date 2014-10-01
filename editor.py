@@ -2,7 +2,7 @@
 # Name:        editor
 # Purpose:     Schema.org Editor
 #
-# Author:      Jeremy Nelson
+# Author:      Jeremy Nelson, Lucas
 #
 # Created:     2014/09/07
 # Copyright:   (c) Jeremy Nelson 2014
@@ -23,12 +23,13 @@ from flask import url_for
 from werkzeug import secure_filename
 
 #! Temp coding hack, need to install when finished
-sys.path.append("E:\\prog\\flask-fedora-commons")
+#sys.path.append("E:\\prog\\flask-fedora-commons")
+sys.path.append("C:\\Users\\jernelson\\Development\\flask-fedora")
 from flask_fedora_commons import Repository
 
 from string import Template
 
-TEMP_UPLOADS = 'files/temp'
+TEMP_UPLOADS = 'files/temp' # Probably not needed
 ALLOWED_EXTENSIONS = set(["PDF", "MP3"])
 
 editor = Flask(__name__)
@@ -45,6 +46,7 @@ fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
 schema_ns = rdflib.Namespace('http://schema.org/')
+namespaces = [('schema', str(schema_ns))]
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -81,7 +83,9 @@ def get_entities(entity_type):
 @editor.route("/id")
 def get_entity_from_url():
     url = request.args.get('url')
-    return repo.as_json(url)
+    entity_json = repo.as_json(url)
+    print("{} json {}".format(url, entity_json))
+    return entity_json
 
 
 @editor.route("/id/schema/<entity_type>/<entity_id>")
@@ -122,18 +126,34 @@ def new_id(entity_type):
         raise abort(500)
 
 
+@editor.route("/remove",
+              methods=['POST', 'GET'])
+def remove():
+    entity_id = request.form['entityid']
+    property_name = request.form['name']
+    value = request.form['value']
+    result = repo.remove(
+        namespaces,
+        entity_id,
+        'schema:{}'.format(property_name),
+        value)
+    if result is True:
+        return "Success"
+    return "Failed to remove {}'s {} with value {}".format(
+        entity_id, property_name, value)
+
+
 @editor.route("/replace",
               methods=['POST', 'GET'])
 def replace():
-##    if not request.method.startswith('POST'):
-##        raise abort(501)
     entity_id = request.form['entityid']
-    property_name = request.form['name']
+    property_name = 'schema:{}'.format(request.form['name'])
     new_value = request.form['value']
     old_value = request.form['old']
     result = repo.replace(
+        namespaces,
         entity_id,
-##        property_name,
+        property_name,
         old_value,
         new_value)
     if result is True:
@@ -153,10 +173,11 @@ def update():
     if not request.method.startswith('POST'):
         raise abort(401)
     entity_id = request.form['entityid']
-    property_name = filter_id(request.form['name'])
+    property_name = "schema:{}".format(filter_id(request.form['name']))
     property_value = request.form['value']
     count = request.form['count']
-    result = repo.update(entity_id,
+    result = repo.update(namespaces,
+                         entity_id,
                          property_name,
                          property_value)
     if result is True:

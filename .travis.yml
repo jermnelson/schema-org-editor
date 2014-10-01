@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.4"
+install: 
+  - pip install -r requirements.txt
+  - wget http://repo1.maven.org/maven2/org/fcrepo/fcrepo-webapp/4.0.0-beta-03/fcrepo-webapp-4.0.0-beta-03-jetty-console.war
+script:  
+  - java -jar fcrepo-webapp-4.0.0-beta-03-jetty-console.war
+  - python tests.py

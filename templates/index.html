@@ -253,7 +253,22 @@
 <script>
 
   function deleteValue(element) {
-    console.log("In deleteValue function");
+    var input =  $('#'+element.attributes['target'].value);
+    var name = input.attr('id').slice(0, input.attr('id').length-1);
+    $.ajax({
+      type: 'POST',
+      url: '/remove',
+      data: {entityid: $('#entity_id').val(),
+             name: name,
+             value: input.val() }
+     }).done(function(status) {
+       var btn_grp = $(element).parent();
+       var input_field = btn_grp.parent().prev();
+       btn_grp.remove();
+       input_field.remove();
+       //element.attributes['original'] = input.val();
+     });
+
   }
 
   function replaceValue(element) {
@@ -383,6 +398,14 @@
     self.idSearchValue = ko.observable();
     self.selectedValue = ko.observable();
 
+    self.fedora_uris = ["http://fedora.info/definitions/v4/repository#created",
+        "http://fedora.info/definitions/v4/repository#createdBy",
+        "http://fedora.info/definitions/v4/repository#lastModified",
+        "http://fedora.info/definitions/v4/repository#lastModifiedBy",
+        "http://fedora.info/definitions/v4/repository#uuid", 
+        "http://fedora.info/definitions/v4/repository#hasParent"]; 
+   
+
     self.loadEntity = function() {
       if (self.selectedValue().substring(0, 'http'.length) !== 'http') {
         alert('Not a valid string');
@@ -391,25 +414,22 @@
       $.getJSON('/id?url=' + self.selectedValue(),
         function(data) {
          if(data) {
-           var entity = data[0];
+           for(i in data) {
+             var entity = data[i];
+             if(entity['@id'] == self.selectedValue()) {
+               break;
+             }
+           }
            var typeName = '';
-           console.log(entity);
            self.fedoraProperties.removeAll();
-           console.log(entity);
-           self.fedoraProperties.push({'name': 'created',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#created'][0]['@value']});
-           self.fedoraProperties.push({'name': 'createdBy',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#createdBy'][0]['@value']});
-           self.fedoraProperties.push({'name': 'lastModified',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#lastModified'][0]['@value']});
-           self.fedoraProperties.push({'name': 'lastModifiedBy',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#lastModifiedBy'][0]['@value']});
-           self.fedoraProperties.push({'name': 'UUID',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#uuid'][0]['@value']});
-           self.fedoraProperties.push({'name': 'hasParent',
-                                       'value': entity['http://fedora.info/definitions/v4/repository#hasParent'][0]['@id']});
-
-
+           for(i in self.fedora_uris) {
+             var uri = self.fedora_uris[i];
+             if(uri in entity) {
+               var name = uri.split("#")[1];
+               self.fedoraProperties.push({'name': name,
+                                           'value': uri});  
+             }
+           }
            self.idValue(entity['@id']);
            for(i in entity['@type']) {
              var prop_url = entity['@type'][i];
@@ -565,3 +585,4 @@
 </script>
   </body>
 </html>
+
