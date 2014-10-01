@@ -171,34 +171,20 @@ def update():
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
-        print(file)
         if file:
-            filename = secure_filename(file.filename)
-            #file.save(os.path.join(editor.config['UPLOAD_FOLDER'], filename))
-            entity_id = request.form['entityid']
+            entity_id = request.form['entityid']  # This kills the request
             if not entity_id.startswith("http"):
                 entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
             else:
                 entity_uri = entity_id
             if not repo.exists(entity_id):
                 repo.create(entity_id)
-            sparql_template = Template("""PREFIX schema: <http://schema.org/>
-            INSERT DATA {
-                <$entity> $prop_name "$prop_value"
-            }""")
-            sparql = sparql_template.substitute(
-                entity=entity_uri+"/fcr:content",
-                prop_name="--upload-file",
-                prop_value=file)
-
+            entity_uri = entity_uri+"/fcr:content"
             update_request = urllib.request.Request(
                 entity_uri,
-                data=sparql.encode(),
-                method='POST',
-                headers={'Content-Type': 'application/sparql-update'})
-            print("Before request")
+                data=file,
+                method='POST')
             response = urllib.request.urlopen(update_request)
-            print("After request")
             if response.code < 400:
                 return "Success"
             return "Adding of datastream failed"
