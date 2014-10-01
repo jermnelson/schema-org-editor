@@ -384,6 +384,8 @@
     }
 
     self.editEntity = function() {
+      self.selectedValue(self.selectedEntity());
+      $('#display-entities-dlg').modal('hide');
       self.loadEntity();
     }
 
@@ -421,8 +423,9 @@
              var uri = self.fedora_uris[i];
              if(uri in entity) {
                var name = uri.split("#")[1];
+               var value = entity[uri][0];
                self.fedoraProperties.push({'name': name,
-                                           'value': uri});  
+                                           'value': value['@value']});  
              }
            }
            self.idValue(entity['@id']);
