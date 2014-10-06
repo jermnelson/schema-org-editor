@@ -18,8 +18,8 @@ import urllib
 import uuid
 import os
 
-from flask import abort, Flask, g, jsonify, redirect, render_template, request
-from flask import url_for
+from flask import abort, Flask, flash, g, jsonify, session, redirect
+from flask import render_template, request, url_for
 from werkzeug import secure_filename
 
 #! Temp coding hack, need to install when finished
@@ -191,8 +191,8 @@ def update():
 @editor.route("/upload", methods=['POST', 'GET'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files['file']
-        if file:
+        datastream = request.files['file']
+        if datastream:
             entity_id = request.form['entityid']  # This kills the request
             if not entity_id.startswith("http"):
                 entity_uri = urllib.parse.urljoin(fedora_base, entity_id)
@@ -201,21 +201,27 @@ def upload_file():
             if not repo.exists(entity_id):
                 repo.create(entity_id)
             entity_uri = entity_uri+"/fcr:content"
+            print("Entity uri is {}".format(entity_uri))
+            blob = datastream.read()
             update_request = urllib.request.Request(
                 entity_uri,
-                data=file,
-                method='POST')
+                data=blob,
+                method='PUT',
+                headers={'Content-length': len(blob)})
             response = urllib.request.urlopen(update_request)
             if response.code < 400:
-                return "Success"
-            return "Adding of datastream failed"
-    return "Failure, not Posting, or bad file/extension"
+                session['entity-id'] =  entity_id
+                flash("Successfully uploaded datastream {}".format(entity_uri))
+            flash("Adding of datastream failed")
+    else:
+        flash("Failure, not Posting, or bad file/extension")
+    redirect(url_for('/'))
 
 
 @editor.route("/")
 def index():
-    return render_template("index.html")
-
+    entity_id = session.pop('entity-id', None)
+    return render_template("index.html", existing_entity=entity_id)
 
 def main():
     host = '0.0.0.0'
