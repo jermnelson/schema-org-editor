@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+"""-----------------------------------------------------------------------------
 # Name:        editor
 # Purpose:     Schema.org Editor
 #
@@ -7,7 +7,7 @@
 # Created:     2014/09/07
 # Copyright:   (c) Jeremy Nelson 2014
 # Licence:     MIT
-#-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------"""
 import datetime
 import hashlib
 import json
@@ -35,13 +35,13 @@ ALLOWED_EXTENSIONS = set(["PDF", "MP3"])
 editor = Flask(__name__)
 editor.config["UPLOAD_FOLDER"] = 'files/temp'
 editor.config.from_pyfile('editor.cfg')
-repo = Repository(editor)
+repo = Repository(app=editor, base_url='http://172.25.1.108:8080')
 
 TEMP_UPLOADS = 'files/temp'
 ALLOWED_EXTENSTIONS = set(["pdf", "mp3"])
 
-# fedora_base = 'http://172.25.1.108:8080/rest/'
-fedora_base = 'http://localhost:8080/rest/schema/'
+fedora_base = 'http://172.25.1.108:8080/rest/'
+#fedora_base = 'http://localhost:8080/rest/schema/'
 fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
@@ -110,21 +110,12 @@ def get_entity(entity_type, entity_id):
 
 @editor.route("/id/new/<entity_type>")
 def new_id(entity_type):
-    entity_id = "/".join([entity_type, str(uuid.uuid4())])
-    if entity_id.startswith("/"):
-        entity_id = entity_id[1:]
-    entity_url = "".join([fedora_base, entity_id])
-    entity_graph = rdflib.Graph()
-    entity_graph.add((rdflib.URIRef(entity_url),
-                      rdflib.RDF.type,
-                      rdflib.URIRef("/".join(
-                        ["http://schema.org",entity_type]))))
-    response_uri = repo.create(entity_url, entity_graph)
-    if response_uri is not None:
-        return entity_url
-    else:
-        raise abort(500)
-
+    entity_url = repo.create()
+    repo.insert(
+        entity_url,
+        "rdf:type",
+        "/".join(["http://schema.org",entity_type]))
+    return entity_url
 
 @editor.route("/remove",
               methods=['POST', 'GET'])
@@ -176,10 +167,10 @@ def update():
     property_name = "schema:{}".format(filter_id(request.form['name']))
     property_value = request.form['value']
     count = request.form['count']
-    result = repo.update(namespaces,
-                         entity_id,
-                         property_name,
-                         property_value)
+    result = repo.replace(entity_id,
+                          property_name,
+                          '',
+                          property_value)
     if result is True:
         return "Success!"
     return "Your request {}={} for {} failed".format(property_name,
