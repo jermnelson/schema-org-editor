@@ -22,9 +22,6 @@ from flask import abort, Flask, flash, g, jsonify, session, redirect
 from flask import render_template, request, url_for
 from werkzeug import secure_filename
 
-#! Temp coding hack, need to install when finished
-#sys.path.append("E:\\prog\\flask-fedora-commons")
-sys.path.append("C:\\Users\\jernelson\\Development\\flask-fedora")
 from flask_fedora_commons import Repository
 
 from string import Template
@@ -40,8 +37,7 @@ repo = Repository(app=editor, base_url='http://172.25.1.108:8080')
 TEMP_UPLOADS = 'files/temp'
 ALLOWED_EXTENSTIONS = set(["pdf", "mp3"])
 
-fedora_base = 'http://172.25.1.108:8080/rest/'
-#fedora_base = 'http://localhost:8080/rest/schema/'
+fedora_base = 'http://localhost:8080/rest/schema/'
 fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))

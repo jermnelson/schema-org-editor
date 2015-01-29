@@ -599,7 +599,7 @@
  $.getJSON('http://schema.rdfs.org/all.json', function(data) {
     var view_model = new viewModel(data);
     ko.applyBindings(view_model);
-    view_model.loadExtension('{{ url_for('static', filename='json/bibex.json') }}');
+    view_model.loadExtension('{{ url_for('static', filename='json/bibliograph.json') }}');
  });
 
 
