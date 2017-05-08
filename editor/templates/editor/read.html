@@ -1,0 +1,26 @@
+{% extends 'editor/base.html' %}
+
+{% block main %}
+<h1>{{ label }}</h1>
+<form class="form" action="{{ url_for('schema_editor.edit', thing=iri.split("/")[-1]) }}" method="POST">
+<dl class="row">
+{% for field in form %}
+    <dt class="col-sm-3">{{ field.label }}</dt>
+    <dd class="col-sm-9">
+    {% if form.errors.get(field.id) %}
+    <strong class="text-danger">Errors!</strong>
+    <ul> 
+    {% for error in form.errors.get(field.id) %}
+        <li class="text-danger">{{ error }}</li>
+    {% endfor %}
+    </ul>
+        {{ field(class_='form-control form-control-danger') }}
+    {% else %}
+        {{ field(class_='form-control') }}
+    {% endif %}
+    </dd>
+{% endfor %}
+</dl>
+<input type="submit" value="Save" class="btn btn-primary"></input>
+</form>
+{% endblock %}

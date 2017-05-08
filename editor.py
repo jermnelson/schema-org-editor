@@ -22,7 +22,6 @@ from flask import abort, Flask, flash, g, jsonify, session, redirect
 from flask import render_template, request, url_for
 from werkzeug import secure_filename
 
-from flask_fedora_commons import Repository
 
 from string import Template
 
@@ -31,14 +30,11 @@ ALLOWED_EXTENSIONS = set(["PDF", "MP3"])
 
 editor = Flask(__name__)
 editor.config["UPLOAD_FOLDER"] = 'files/temp'
-editor.config.from_pyfile('editor.cfg')
-repo = Repository(app=editor, base_url='http://172.25.1.108:8080')
+#editor.config.from_pyfile('editor.cfg')
 
 TEMP_UPLOADS = 'files/temp'
 ALLOWED_EXTENSTIONS = set(["pdf", "mp3"])
 
-fedora_base = 'http://localhost:8080/rest/schema/'
-fcrepo = rdflib.Namespace('http://fedora.info/definitions/v4/repository#')
 literal_set = set(['Text', 'Number', 'Date'])
 schema_json = json.load(open('schema_org.json'))
 schema_ns = rdflib.Namespace('http://schema.org/')
@@ -207,7 +203,8 @@ def upload_file():
 
 @editor.route("/")
 def index():
-    entity_id = session.pop('entity-id', None)
+    #entity_id = session.pop('entity-id', None)
+    entity_id = None
     return render_template("index.html", existing_entity=entity_id)
 
 def main():
