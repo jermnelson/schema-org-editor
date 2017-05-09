@@ -44,7 +44,7 @@ def guess_field(iri):
     ranges = [o for o in SCHEMA_VOCAB.objects(subject=iri,
         predicate=SCHEMA.rangeIncludes)]
     for row in ranges:
-        if row == SCHEMA.Text:
+        if row == SCHEMA.Text or row == SCHEMA.URL:
             field = StringField(label)
             break
         elif row == SCHEMA.Boolean:
